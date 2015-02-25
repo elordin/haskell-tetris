@@ -1,6 +1,6 @@
 module Util where
 
-import Graphics.UI.GLUT
+import Graphics.UI.GLUT hiding (Level)
 
 -- 'Constants' definitions
 
@@ -12,12 +12,22 @@ darkG  = color $ Color3 (0.2 :: GLfloat) (0.3 :: GLfloat) (0.2 :: GLfloat)
 
 -- Data definitions
 
+type Coord = (Int, Int)
+
+-- Keyboard input
+data Input = OneDown | Spin | Drop | Hold | ShiftLeft | ShiftRight | Esc
+    deriving(Show, Eq, Enum)
+
+-- Rotation
+data Rotation = Clockwise | CounterClockwise
+
 -- Blocks
+
 class Tetromino a where
     -- colour scheme from the outside in
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
     -- initial coordinates, centre of rotation should be first
-    coords :: a -> Maybe ((Int,Int), (Int,Int), (Int,Int), (Int,Int))
+    coords :: a -> Maybe (Coord, Coord, Coord, Coord)
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb | Void
     deriving(Show, Eq)
@@ -40,8 +50,18 @@ instance Tetromino Block where
     coords Tb   = Just ((0, 0), (-1,  0), (0, 1), (1, 0))
     coords Void = Nothing
 
-data World   = World [[Block]]
-    deriving(Show)
-data Game = Game {world::World}
+type World = [[Block]]
 
--- rotate :: ((Int,Int), (Int,Int), (Int,Int), (Int,Int)) -> (Int, Int) -> ((Int,Int), (Int,Int), (Int,Int), (Int,Int))
+data Level = Level {lines::Int, frequency::Int}
+data Game = Game {world::World, level::Level, levels::[Level], score::Int}
+
+rotate :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
+rotate (o1, o2, o3, o4) (cx, cy) r =
+    case r of
+        Clockwise        -> ((o1ny, -1 * o1nx), (o2ny, -1 * o2nx), (o3ny, -1 * o3nx), (o4ny, -1 * o4nx))
+        CounterClockwise -> ((-1 * o1ny, o1nx), (-1 * o2ny, o2nx), (-1 * o3ny, o3nx), (-1 * o4ny, o4nx))
+    where normalize (x,y) = (x - cx, y - cy)
+          (o1nx, o1ny)    = normalize o1
+          (o2nx, o2ny)    = normalize o2
+          (o3nx, o3ny)    = normalize o3
+          (o4nx, o4ny)    = normalize o4

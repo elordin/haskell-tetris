@@ -2,25 +2,26 @@ module Display where
 
 import Control.Concurrent.STM
 import Control.Applicative
-import Graphics.UI.GLUT
+import Graphics.UI.GLUT hiding (Level)
+
 
 import Util
 
-
 displayGame :: TVar Game -> DisplayCallback
-displayGame game = do
+displayGame tGame = do
     clear [ColorBuffer]
+    g <- atomically $ readTVar tGame
     drawBackdrop
+    drawText g
     preservingMatrix $ do
         -- set frame of reference for drawing the field
-        translate $ Vector3 (-8/9 :: GLfloat) (-1 :: GLfloat) (0 :: GLfloat)
+        translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
         scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
-        w <- world <$> (atomically $ readTVar game)
-        drawWorld w
+        drawWorld $ world g
     flush
 
 drawWorld :: World -> IO ()
-drawWorld (World world) = do
+drawWorld world = do
     drawLines 0 world
     where drawLines _ []   = return ()
           drawLines y (l:t)    = do
@@ -30,6 +31,11 @@ drawWorld (World world) = do
           drawCells x y (h:t) = do
             drawBlockAt h x y
             drawCells (x+1) y t
+
+drawText :: Game -> IO ()
+drawText game = do
+    renderString TimesRoman10 $ show $ score game
+
 
 drawBackdrop :: IO ()
 drawBackdrop = do
@@ -56,23 +62,21 @@ drawBackdrop = do
         vertex $ Vertex3 (0.875 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.25  :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
 
-        preservingMatrix $ do
-            scale (2 :: GLfloat) (2 :: GLfloat) (1 :: GLfloat)
-            lightG
-            heightOfString <- fontHeight TimesRoman10
-            widthOfString <- stringWidth TimesRoman10 "HelloWorld"
-            print heightOfString
-            print widthOfString
-            renderString TimesRoman10 "Hello World"
+    preservingMatrix $ do
+        --scale (2 :: GLfloat) (2 :: GLfloat) (1 :: GLfloat)
+        lightG
+        heightOfString <- fontHeight TimesRoman10
+        widthOfString <- stringWidth TimesRoman10 "HelloWorld"
+        renderString TimesRoman10 "Hello World"
 
-drawBlockAt :: Block -> GLfloat -> GLfloat -> IO ()
+drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y = do
     preservingMatrix $ do
-        translate $ Vector3 x y (0::GLfloat)
-        drawBlock $ colorScheme block
+        translate $ Vector3 x (y - 18) (0::GLfloat)
+        drawBlock block
 
-drawBlock :: (IO (), IO (), IO (), IO ()) -> IO ()
-drawBlock (c1,c2,c3,c4) = renderPrimitive Quads $ do
+drawBlock :: Tetromino t => t -> IO ()
+drawBlock block = renderPrimitive Quads $ do
     c1
     vertex $ Vertex3 (0    :: GLfloat) (0    :: GLfloat) (0 :: GLfloat)
     vertex $ Vertex3 (0    :: GLfloat) (1    :: GLfloat) (0 :: GLfloat)
@@ -93,3 +97,4 @@ drawBlock (c1,c2,c3,c4) = renderPrimitive Quads $ do
     vertex $ Vertex3 (0.4  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
     vertex $ Vertex3 (0.6  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
     vertex $ Vertex3 (0.6  :: GLfloat) (0.4  :: GLfloat) (0 :: GLfloat)
+    where (c1, c2, c3, c4) = colorScheme block

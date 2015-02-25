@@ -1,6 +1,7 @@
 import Control.Concurrent.STM
-import Graphics.UI.GLUT
+import Graphics.UI.GLUT hiding (Level)
 import Graphics.UI.GLUT.Menu
+import Control.Applicative
 
 import Util
 import Game
@@ -16,13 +17,16 @@ main = do
     window <- createWindow "Tretis"
     queue  <- newTVarIO []
     paused <- newTVarIO True
-    game   <- newTVarIO $ Game $ World $ [[Tb, Void, Void, Void, Tb, Tb, Tb], [Tb, Tb, Void, Void, Lb, Tb, Void], [Tb, Void, Void, Void, Lb, Lb, Lb]]
-    print $ World $ [[Tb, Void, Void, Void, Tb, Tb, Tb], [Tb, Tb, Void, Void, Lb, Tb, Void], [Tb, Void, Void, Void, Lb, Lb, Lb]]
+    game   <- newTVarIO $ Game ([Void, Ib, Ib, Ib, Ib]:(replicate 17 [])) (Level 10 500) [] 0
     windowSize $= Size windowHeight windowWidth
     viewport $= (Position 0 0, Size windowWidth windowHeight)
     displayCallback $= displayGame game
     reshapeCallback $= Just reshape
     keyboardMouseCallback $= Just (keyboardHandler queue paused)
+
+    addTimerCallback 500 (dropOne game)
+    --idleCallback $= Just (dropOne game)
+
     fullScreen
     mainLoop
 
@@ -35,3 +39,15 @@ reshape size = do
         offsetY  = (h - newsize)
     viewport    $= (Position 0 offsetY, Size newsize newsize)
     postRedisplay Nothing
+
+dropOne :: TVar Game -> TimerCallback
+dropOne tGame = do
+    f <- atomically $ do
+        modifyTVar tGame rot
+        (frequency.level) <$> (readTVar tGame)
+    postRedisplay Nothing
+    addTimerCallback f (dropOne tGame)
+    where rot :: Game -> Game
+          rot g = case world g of
+                    [] -> g {world = []}
+                    (h:t) -> g {world = (t ++ [h])}

@@ -1,12 +1,10 @@
 module KeyboardHandler where
 
 import Control.Concurrent.STM
-import Graphics.UI.GLUT
+import Graphics.UI.GLUT hiding (Level)
 import System.Exit
 import Control.Monad
-
-data Input = OneDown | Spin | Drop | Hold | ShiftLeft | ShiftRight | Esc
-    deriving(Show, Eq, Enum)
+import Util
 
 keyboardHandler :: TVar [Input] -> TVar Bool -> KeyboardMouseCallback
 keyboardHandler _ _ (SpecialKey KeyF4) Down (Modifiers _ _ Down) _ = exitSuccess -- Alt+F4
