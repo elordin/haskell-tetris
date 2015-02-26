@@ -11,13 +11,15 @@ displayGame :: TVar Game -> DisplayCallback
 displayGame tGame = do
     clear [ColorBuffer]
     g <- atomically $ readTVar tGame
-    drawBackdrop
-    drawText g
-    preservingMatrix $ do
-        -- set frame of reference for drawing the field
-        translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
-        scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
-        drawWorld $ world g
+    case g of
+        GameMenu i     -> drawMenu i
+        Game _ _ _ _ _ -> do
+            drawBackdrop
+            preservingMatrix $ do
+                -- set frame of reference for drawing the field
+                translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
+                scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
+                drawWorld $ world g
     flush
 
 drawWorld :: World -> IO ()
@@ -34,7 +36,8 @@ drawWorld world = do
 
 drawText :: Game -> IO ()
 drawText game = do
-    renderString TimesRoman10 $ show $ score game
+    preservingMatrix $ do
+        renderString TimesRoman10 $ show $ score game
 
 
 drawBackdrop :: IO ()
@@ -63,7 +66,7 @@ drawBackdrop = do
         vertex $ Vertex3 (0.25  :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
 
     preservingMatrix $ do
-        --scale (2 :: GLfloat) (2 :: GLfloat) (1 :: GLfloat)
+        scale (2 :: GLfloat) (2 :: GLfloat) (1 :: GLfloat)
         lightG
         heightOfString <- fontHeight TimesRoman10
         widthOfString <- stringWidth TimesRoman10 "HelloWorld"
@@ -98,3 +101,42 @@ drawBlock block = renderPrimitive Quads $ do
     vertex $ Vertex3 (0.6  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
     vertex $ Vertex3 (0.6  :: GLfloat) (0.4  :: GLfloat) (0 :: GLfloat)
     where (c1, c2, c3, c4) = colorScheme block
+
+
+drawMenu :: MItem -> IO ()
+drawMenu active = do
+    renderPrimitive Quads $ do
+        lightG
+        case active of
+            Start -> do
+                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.53  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.53  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.695 :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.695 :: GLfloat) (0 :: GLfloat)
+            Quit  -> do
+                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.73  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.73  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.895 :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.895 :: GLfloat) (0 :: GLfloat)
+        black
+        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.74  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.74  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.885 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.885 :: GLfloat) (0 :: GLfloat)
+
+        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.54  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.54  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.685 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.685 :: GLfloat) (0 :: GLfloat)
+
+        white
+        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.75  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.75  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
+
+        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.55  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.55  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
+

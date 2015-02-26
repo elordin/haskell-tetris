@@ -15,8 +15,8 @@ darkG  = color $ Color3 (0.2 :: GLfloat) (0.3 :: GLfloat) (0.2 :: GLfloat)
 type Coord = (Int, Int)
 
 -- Keyboard input
-data Input = OneDown | Spin | Drop | Hold | ShiftLeft | ShiftRight | Esc
-    deriving(Show, Eq, Enum)
+--type Input = OneDown | Spin | Drop | Hold | ShiftLeft | ShiftRight | Esc
+    --deriving(Show, Eq, Enum)
 
 -- Rotation
 data Rotation = Clockwise | CounterClockwise
@@ -28,6 +28,8 @@ class Tetromino a where
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
     -- initial coordinates, centre of rotation should be first
     coords :: a -> Maybe (Coord, Coord, Coord, Coord)
+
+    --rotate :: a -> Rotation -> (Coord, Coord, Coord, Coord)
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb | Void
     deriving(Show, Eq)
@@ -53,10 +55,25 @@ instance Tetromino Block where
 type World = [[Block]]
 
 data Level = Level {lines::Int, frequency::Int}
-data Game = Game {world::World, level::Level, levels::[Level], score::Int}
+    deriving(Show)
 
-rotate :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
-rotate (o1, o2, o3, o4) (cx, cy) r =
+data MItem = Start | Quit
+    deriving(Show)
+--instance Enum MItem where
+--    succ Start = Quit
+--    succ Quit = Start
+--    pred Start = Quit
+--    pred Quit = Start
+    --deriving(Eq, Enum)
+--succ Start = Quit
+--succ Quit  = Start
+
+data Game = Game {world::World, level::Level, levels::[Level], score::Int, paused::Bool} | GameMenu MItem
+    deriving(Show)
+
+rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
+--rotateNormalized :: Tetromino t => t -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
+rotateNormalized (o1, o2, o3, o4) (cx, cy) r =
     case r of
         Clockwise        -> ((o1ny, -1 * o1nx), (o2ny, -1 * o2nx), (o3ny, -1 * o3nx), (o4ny, -1 * o4nx))
         CounterClockwise -> ((-1 * o1ny, o1nx), (-1 * o2ny, o2nx), (-1 * o3ny, o3nx), (-1 * o4ny, o4nx))
