@@ -18,12 +18,12 @@ main = do
     window <- createWindow "Tretis"
     queue  <- newTVarIO []
     paused <- newTVarIO True
-    game   <- newTVarIO $ GameMenu Quit
+    game   <- newTVarIO $ GameMenu Start
     --game   <- newTVarIO $ Game ([Void, Ib, Ib, Ib, Ib]:(replicate 17 [])) (Level 10 500) [] 0
     windowSize $= Size windowHeight windowWidth
     viewport $= (Position 0 0, Size windowWidth windowHeight)
     displayCallback $= displayGame game
-    reshapeCallback $= Just reshape
+    reshapeCallback $= Just reshapeHandler
     keyboardMouseCallback $= Just (keyboardHandler queue paused)
 
     --addTimerCallback 500 (dropOne game)
@@ -32,8 +32,8 @@ main = do
     fullScreen
     mainLoop
 
-reshape :: ReshapeCallback
-reshape size = do
+reshapeHandler :: ReshapeCallback
+reshapeHandler size = do
     let Size w h = size
         newsize :: GLsizei
         newsize  = min w h
@@ -42,19 +42,28 @@ reshape size = do
     viewport    $= (Position 0 offsetY, Size newsize newsize)
     postRedisplay Nothing
 
+gameIdleHandler :: TVar [Key] -> TVar Game -> IdleCallback
+gameIdleHandler queue game = do
+    input <- readInput queue
+    case input of
+        Just (Char '\ESC') -> do                                                -- return to menu
+            atomically $ writeTVar game $ GameMenu Start
+            idleCallback $= Just (menuHandler queue game)
+            postRedisplay Nothing
+        Just (Char '\r')   -> modifyAndDisplay game togglePause
+        Just (Char '\n')   -> modifyAndDisplay game togglePause
+        Just (Char 'p' )   -> modifyAndDisplay game togglePause
+        _                  -> return ()
+    where togglePause g@(Game _ _ _ _ p) = g { paused = not p }
+          togglePause m                  = m
 
 menuHandler :: TVar [Key] -> TVar Game -> IdleCallback
 menuHandler queue game = do
-    input <- atomically $ do
-        q <- readTVar queue
-        case q of
-            []    -> return Nothing
-            (h:t) -> do
-                writeTVar queue t
-                return $ Just h
+    input <- readInput queue
     case input of
-        Just (SpecialKey KeyUp)   -> do { atomically $ modifyTVar game toggleMenuItem; postRedisplay Nothing }
-        Just (SpecialKey KeyDown) -> do { atomically $ modifyTVar game toggleMenuItem; postRedisplay Nothing }
+        Just (Char '\ESC')        -> exitSuccess
+        Just (SpecialKey KeyUp)   -> modifyAndDisplay game toggleMenuItem
+        Just (SpecialKey KeyDown) -> modifyAndDisplay game toggleMenuItem
         Just (Char '\n')          -> do { select; postRedisplay Nothing }
         Just (Char '\r')          -> do { select; postRedisplay Nothing }
         _                         -> return ()
@@ -65,9 +74,25 @@ menuHandler queue game = do
             g <- atomically $ readTVar game
             case g of
                 GameMenu Quit          -> exitSuccess
-                GameMenu Start         -> atomically $ writeTVar game $ Game ([Void, Ib, Ib, Ib, Ib]:(replicate 17 [])) (Level 10 500) [] 0 False
+                GameMenu Start         -> do
+                    atomically $ writeTVar game $ Game ([Void, Ib, Ib, Ib, Ib]:(replicate 17 [])) (Level 10 500) [] 0 False
+                    idleCallback $= Just (gameIdleHandler queue game)
                 g@(Game _ _ _ _ True)  -> atomically $ writeTVar game $ g { paused = False}
                 g@(Game _ _ _ _ False) -> atomically $ writeTVar game $ g { paused = True }
+
+modifyAndDisplay :: TVar Game -> (Game -> Game) -> IO ()
+modifyAndDisplay game action = do
+    atomically $ modifyTVar game action
+    postRedisplay Nothing
+
+readInput :: TVar [Key] -> IO (Maybe Key)
+readInput queue = atomically $ do
+    q <- readTVar queue
+    case q of
+        []    -> return Nothing
+        (h:t) -> do
+            writeTVar queue t
+            return $ Just h
 
 --dropOne :: TVar Game -> TimerCallback
 --dropOne tGame = do

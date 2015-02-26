@@ -20,6 +20,7 @@ displayGame tGame = do
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
                 scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
                 drawWorld $ world g
+            if paused g then drawPausedOverlay else return ()
     flush
 
 drawWorld :: World -> IO ()
@@ -39,6 +40,19 @@ drawText game = do
     preservingMatrix $ do
         renderString TimesRoman10 $ show $ score game
 
+
+drawPausedOverlay :: IO ()
+drawPausedOverlay = renderPrimitive Quads $ do
+    black
+    vertex $ Vertex3 (-0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 (-0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 ( 0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
+    white
+    vertex $ Vertex3 (-0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 (-0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 ( 0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
+    vertex $ Vertex3 ( 0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
 
 drawBackdrop :: IO ()
 drawBackdrop = do
