@@ -3,6 +3,7 @@ module Display where
 import Control.Concurrent.STM
 import Control.Applicative
 import Graphics.UI.GLUT hiding (Level)
+import Data.Map.Strict as Map
 
 import Util
 import Font
@@ -13,32 +14,34 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game _ _ _ _ _ _ -> do
+        Game _ _ _ _ _ _ _ -> do
             drawBackdrop
             preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
                 scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
                 drawWorld $ world g
+                let (blockType, x, y) = activeBlock g
+                drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)
             if paused g then drawPausedOverlay else return ()
     flush
 
 drawWorld :: World -> IO ()
 drawWorld world = do
-    drawLines 0 world
-    where drawLines _ []   = return ()
-          drawLines y (l:t)    = do
-            drawCells 0 y l
-            drawLines (y+1) t
-          drawCells _ _ [] = return ()
-          drawCells x y (h:t) = do
-            drawBlockAt h x y
-            drawCells (x+1) y t
+    mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ Map.toList world
+    --where drawLines _ []   = return ()
+          --drawLines y (l:t)    = do
+          --  drawCells 0 y l
+          --  drawLines (y+1) t
+          --drawCells _ _ [] = return ()
+          --drawCells x y (h:t) = do
+          --  drawBlockAt h x y
+          --  drawCells (x+1) y t
 
 drawText :: Game -> IO ()
 drawText game = do
     preservingMatrix $ do
-        translate $ Vector3 (0::GLfloat) (1::GLfloat) (0::GLfloat)
+        --translate $ Vector3 (0::GLfloat) (1::GLfloat) (0::GLfloat)
         renderString TimesRoman10 $ show $ score game
 
 renderCustomText :: String -> IO ()
@@ -124,7 +127,6 @@ drawBlock block = renderPrimitive Quads $ do
     vertex $ Vertex3 (0.6  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
     vertex $ Vertex3 (0.6  :: GLfloat) (0.4  :: GLfloat) (0 :: GLfloat)
     where (c1, c2, c3, c4) = colorScheme block
-
 
 drawMenu :: MItem -> IO ()
 drawMenu active = do

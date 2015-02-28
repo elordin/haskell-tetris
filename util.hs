@@ -1,6 +1,9 @@
+{-# LANGUAGE GADTs #-}
+
 module Util where
 
 import Graphics.UI.GLUT hiding (Level)
+import Data.Map.Strict as Map
 
 -- 'Constants' definitions
 
@@ -32,7 +35,16 @@ class Tetromino a where
     --rotate :: a -> Rotation -> (Coord, Coord, Coord, Coord)
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb | Void
-    deriving(Show, Eq)
+    deriving(Eq)
+instance Show Block where
+    show Tb   = "T"
+    show Ob   = "O"
+    show Ib   = "I"
+    show Jb   = "J"
+    show Sb   = "S"
+    show Lb   = "L"
+    show Zb   = "Z"
+    show Void = " "
 instance Tetromino Block where
     colorScheme Zb   = (black, lightG, lightG, black )
     colorScheme Sb   = (black, darkG,  black,  white )
@@ -52,26 +64,34 @@ instance Tetromino Block where
     coords Tb   = Just ((0, 0), (-1,  0), (0, 1), (1, 0))
     coords Void = Nothing
 
-type World = [[Block]]
+type World = Map.Map (Int, Int) Block
 
 data Level = Level {lines::Int, frequency::Int}
     deriving(Show)
 
 data MItem = Start | Quit
     deriving(Show)
---instance Enum MItem where
---    succ Start = Quit
---    succ Quit = Start
---    pred Start = Quit
---    pred Quit = Start
-    --deriving(Eq, Enum)
---succ Start = Quit
---succ Quit  = Start
 
-data Game = Game {world::World, level::Level, levels::[Level], score::Int, paused::Bool, hold::Maybe Block} | GameMenu MItem
-    deriving(Show)
+data Game where 
+    -- GADT syntax required for type constraint
+    --Game :: Tetromino t => { world       :: World
+    --                       , level       :: Level
+    --                       , levels      :: [Level]
+    --                       , score       :: Int
+    --                       , paused      :: Bool
+    --                       , hold        :: Maybe Block 
+    --                       , activeBlock :: (t, Int, Int) } -> Game
+    Game :: { world       :: World
+            , level       :: Level
+            , levels      :: [Level]
+            , score       :: Int
+            , paused      :: Bool
+            , hold        :: Maybe Block 
+            , activeBlock :: (Block, Int, Int) } -> Game
+    GameMenu :: MItem -> Game
+
 defaultNewGame = 
-    Game (replicate 18 $ replicate 10 Void) (Level 1 500) [{-- level definitions --}] 0 False Nothing
+    Game (Map.empty) (Level 1 500) [{-- level definitions --}] 0 False Nothing (Tb, 4, 10)
 
 
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
