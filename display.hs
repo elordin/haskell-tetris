@@ -4,8 +4,8 @@ import Control.Concurrent.STM
 import Control.Applicative
 import Graphics.UI.GLUT hiding (Level)
 
-
 import Util
+import Font
 
 displayGame :: TVar Game -> DisplayCallback
 displayGame tGame = do
@@ -13,7 +13,7 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game _ _ _ _ _ -> do
+        Game _ _ _ _ _ _ -> do
             drawBackdrop
             preservingMatrix $ do
                 -- set frame of reference for drawing the field
@@ -38,21 +38,37 @@ drawWorld world = do
 drawText :: Game -> IO ()
 drawText game = do
     preservingMatrix $ do
+        translate $ Vector3 (0::GLfloat) (1::GLfloat) (0::GLfloat)
         renderString TimesRoman10 $ show $ score game
 
+renderCustomText :: String -> IO ()
+renderCustomText str = mapM_ (\c -> do { renderChar c; translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)}) $ str
+
+renderChar :: Char -> IO ()
+renderChar c = 
+    preservingMatrix $ do 
+        translate $ Vector3 (0.1 :: GLfloat) (0.1 :: GLfloat) (0 :: GLfloat)  
+        scale (0.8 :: GLfloat) (0.8 :: GLfloat) (0 :: GLfloat)  
+        renderPrimitive TriangleStrip $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) $ letterPath c
 
 drawPausedOverlay :: IO ()
-drawPausedOverlay = renderPrimitive Quads $ do
+drawPausedOverlay = do
+    renderPrimitive Quads $ do
+        black
+        vertex $ Vertex3 (-0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
+        white
+        vertex $ Vertex3 (-0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (-0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 ( 0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
     black
-    vertex $ Vertex3 (-0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (-0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 ( 0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
-    white
-    vertex $ Vertex3 (-0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (-0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 ( 0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 ( 0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
+    preservingMatrix $ do
+        translate $ Vector3 (-0.4 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
+        scale (0.125 :: GLfloat) (0.125 :: GLfloat) (0 :: GLfloat)
+        renderCustomText "Paused"
 
 drawBackdrop :: IO ()
 drawBackdrop = do
@@ -78,13 +94,6 @@ drawBackdrop = do
         vertex $ Vertex3 (0.875 :: GLfloat) (-0.25  :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.875 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.25  :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
-
-    preservingMatrix $ do
-        scale (2 :: GLfloat) (2 :: GLfloat) (1 :: GLfloat)
-        lightG
-        heightOfString <- fontHeight TimesRoman10
-        widthOfString <- stringWidth TimesRoman10 "HelloWorld"
-        renderString TimesRoman10 "Hello World"
 
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y = do
@@ -153,4 +162,28 @@ drawMenu active = do
         vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.55  :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (-0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
-
+    preservingMatrix $ do 
+        lightG
+        translate $ Vector3 (0 :: GLfloat) (0.25::GLfloat) (0::GLfloat)
+        scale (0.2 :: GLfloat) (0.2 :: GLfloat) (1 :: GLfloat)
+        translate $ Vector3 (-3::GLfloat) (0::GLfloat) (0::GLfloat)
+        renderCustomText "Tetris"
+    preservingMatrix $ do
+        white
+        scale (0.05 :: GLfloat) (0.05 :: GLfloat) (1 :: GLfloat)
+        translate $ Vector3 (-6::GLfloat) (0::GLfloat) (0::GLfloat)
+        renderCustomText "Thomas Weber"
+        translate $ Vector3 (-11.5::GLfloat) (-2::GLfloat) (0::GLfloat)
+        renderCustomText "FFP WS14/15"
+    preservingMatrix $ do
+        black
+        translate $ Vector3 (0 :: GLfloat) (-0.65::GLfloat) (0::GLfloat)
+        scale (0.075 :: GLfloat) (0.075 :: GLfloat) (1 :: GLfloat)
+        translate $ Vector3 (-2.5::GLfloat) (0::GLfloat) (0::GLfloat)
+        renderCustomText "Start"
+    preservingMatrix $ do
+        black
+        translate $ Vector3 (0 :: GLfloat) (-0.85::GLfloat) (0::GLfloat)
+        scale (0.075 :: GLfloat) (0.075 :: GLfloat) (1 :: GLfloat)
+        translate $ Vector3 (-2::GLfloat) (0::GLfloat) (0::GLfloat)
+        renderCustomText "Quit"

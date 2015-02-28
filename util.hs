@@ -68,8 +68,11 @@ data MItem = Start | Quit
 --succ Start = Quit
 --succ Quit  = Start
 
-data Game = Game {world::World, level::Level, levels::[Level], score::Int, paused::Bool} | GameMenu MItem
+data Game = Game {world::World, level::Level, levels::[Level], score::Int, paused::Bool, hold::Maybe Block} | GameMenu MItem
     deriving(Show)
+defaultNewGame = 
+    Game (replicate 18 $ replicate 10 Void) (Level 1 500) [{-- level definitions --}] 0 False Nothing
+
 
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
 --rotateNormalized :: Tetromino t => t -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
