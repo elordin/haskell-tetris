@@ -14,37 +14,29 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game _ _ _ _ _ _ (blockType, (c1,c2,c3,c4)) -> do
+        Game w _ _ _ p _ (blockType, (c1,c2,c3,c4)) -> do
             drawBackdrop
             preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
                 scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
-                drawWorld $ world g
+                -- draw world
+                drawWorld $ w
+                -- draw active block
                 mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
-            if paused g then drawPausedOverlay else return ()
+            -- draw pause overlay
+            if p then drawPausedOverlay else return ()
     flush
 
-drawWorld :: World -> IO ()
-drawWorld world = do
+drawWorld :: Tetromino t => World t -> IO ()
+drawWorld world = 
     mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ Map.toList world
-    --where drawLines _ []   = return ()
-          --drawLines y (l:t)    = do
-          --  drawCells 0 y l
-          --  drawLines (y+1) t
-          --drawCells _ _ [] = return ()
-          --drawCells x y (h:t) = do
-          --  drawBlockAt h x y
-          --  drawCells (x+1) y t
-
-drawText :: Game -> IO ()
-drawText game = do
-    preservingMatrix $ do
-        --translate $ Vector3 (0::GLfloat) (1::GLfloat) (0::GLfloat)
-        renderString TimesRoman10 $ show $ score game
 
 renderCustomText :: String -> IO ()
-renderCustomText str = mapM_ (\c -> do { renderChar c; translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)}) $ str
+renderCustomText str = 
+    mapM_ (\c -> do 
+        renderChar c
+        translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)) $ str
 
 renderChar :: Char -> IO ()
 renderChar c = 

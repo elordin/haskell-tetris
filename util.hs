@@ -1,5 +1,4 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE ExistentialQuantification #-}
 
 module Util where
 
@@ -8,7 +7,6 @@ import qualified Data.Map.Strict as Map
 import System.Random
 
 -- 'Constants' definitions
-
 -- Colours
 white  = color $ Color3 (1 :: GLfloat) (1 :: GLfloat) (1 :: GLfloat)
 black  = color $ Color3 (0 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
@@ -18,22 +16,12 @@ darkG  = color $ Color3 (0.2 :: GLfloat) (0.3 :: GLfloat) (0.2 :: GLfloat)
 -- Data definitions
 
 type Coord = (Int, Int)
-
--- Keyboard input
---type Input = OneDown | Spin | Drop | Hold | ShiftLeft | ShiftRight | Esc
-    --deriving(Show, Eq, Enum)
-
--- Rotation
 data Rotation = Clockwise | CounterClockwise
-
--- Blocks
-
 class Tetromino a where
     -- colour scheme from the outside in
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
     -- initial coordinates, centre of rotation should be first
     coords :: a -> Maybe (Coord, Coord, Coord, Coord)
-
     --rotate :: a -> Rotation -> (Coord, Coord, Coord, Coord)
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb | Void
@@ -66,7 +54,7 @@ instance Tetromino Block where
     coords Tb   = Just ((0, 0), (-1,  0), (0, 1), (1, 0))
     coords Void = Nothing
 
-type World = Map.Map (Int, Int) Block
+type World t = Map.Map (Int, Int) t
 
 data Level = Level {lines::Int, frequency::Int}
     deriving(Show)
@@ -74,26 +62,15 @@ data Level = Level {lines::Int, frequency::Int}
 data MItem = Start | Quit
     deriving(Show)
 
--- ExistentialQuantification syntax
-data Game = forall t . Tetromino t => Game { world :: World
-                                           , level       :: Level
-                                           , levels      :: [Level]
-                                           , score       :: Int
-                                           , paused      :: Bool
-                                           , hold        :: Maybe t
-                                           , activeBlock :: (t, (Coord, Coord, Coord, Coord)) } 
-          | GameMenu MItem
-
--- GADT syntax
---data Game where
-    --Game :: Tetromino t => { world       :: World
-    --                       , level       :: Level
-    --                       , levels      :: [Level]
-    --                       , score       :: Int
-    --                       , paused      :: Bool
-    --                       , hold        :: Maybe t
-    --                       , activeBlock :: (t, (Coord, Coord, Coord, Coord)) } -> Game
-    --GameMenu :: MItem -> Game
+data Game where
+    Game :: Tetromino t => { world       :: World t
+                           , level       :: Level
+                           , levels      :: [Level]
+                           , score       :: Int
+                           , paused      :: Bool
+                           , hold        :: Maybe t
+                           , activeBlock :: (t, (Coord, Coord, Coord, Coord)) } -> Game
+    GameMenu :: MItem -> Game
 
 defaultNewGame = 
     Game (fst $ foldr (\k (m,rnd) -> 
