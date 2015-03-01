@@ -49,13 +49,13 @@ freeForBlock (Game w _ _ _ _ _ _) (a,b,c,d) =
                 Nothing -> True
                 Just _  -> False) [a,b,c,d]
 
---spin :: Game -> Game
---spin game@(Game w l ls s p h (blockType, coords@(cor,_,_,_))) = 
---    let rotated = rotateNormalized coords cor Clockwise
---    in if freeForBlock game rotated 
---       then Game w l ls s p h (blockType, rotated)
---       else game
---spin g = g
+spin :: Game -> Game
+spin game@(Game w l ls s p h (blockType, coords@(cor, _, _, _))) =
+    if freeForBlock game rotated 
+    then Game w l ls s p h (blockType, rotated)
+    else game
+    where rotated = rotateNormalized coords cor Clockwise
+spin m = m
 
 dropDown :: Game -> Game
 dropDown = (foldl (\f _ -> shiftDown.f) shiftDown [1..17])

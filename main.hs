@@ -71,7 +71,7 @@ gameHandler queue game = do
         Just (SpecialKey KeyLeft)   -> modAndPlay shiftLeft
         Just (SpecialKey KeyRight)  -> modAndPlay shiftRight
         Just (SpecialKey KeyDown)   -> modAndPlay shiftDown
-        --Just (SpecialKey KeyUp)     -> modAndPlay spin
+        Just (SpecialKey KeyUp)     -> modAndPlay spin
         Just (Char ' ')             -> modAndPlay dropDown
         Just (SpecialKey KeyShiftR) -> modAndPlay holdBlock
         _                           ->
