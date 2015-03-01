@@ -14,8 +14,34 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game w _ _ _ p _ (blockType, (c1,c2,c3,c4)) -> do
+        Game w ls s p (h, ch) nxtBlock (blockType, cs) -> do
             drawBackdrop
+
+            -- draw score and lines 2 go text
+            let lines2go = case ls of 
+                            []              -> 0
+                            ((Level l _):t) -> l
+            preservingMatrix $ do
+                black
+                translate $ Vector3 ((0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show lines2go))) :: GLfloat) (0.325 :: GLfloat) (0 :: GLfloat)
+                scale (0.1 :: GLfloat) (0.1 :: GLfloat) (1 :: GLfloat)
+                renderCustomText $ show lines2go
+            preservingMatrix $ do
+                black
+                translate $ Vector3 ((0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show s))) :: GLfloat) (0.7 :: GLfloat) (0 :: GLfloat)
+                scale (0.1 :: GLfloat) (0.1 :: GLfloat) (1 :: GLfloat)
+                renderCustomText $ show s
+
+            -- redraw hold area in gray if already held a block
+            if ch
+            then return () 
+            else renderPrimitive Quads $ do
+                gray
+                vertex $ Vertex3 (0.25  :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 (0.875 :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 (0.875 :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
+                vertex $ Vertex3 (0.25  :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
+
             preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
@@ -23,10 +49,26 @@ displayGame tGame = do
                 -- draw world
                 drawWorld $ w
                 -- draw active block
-                mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+                drawSingle blockType cs
+                -- draw hold
+                case h of
+                    Nothing    -> return ()
+                    Just block -> preservingMatrix $ do
+                        case coords block of 
+                            Nothing -> return ()
+                            Just cs -> do
+                                translate $ Vector3 (14 :: GLfloat) (7.25 :: GLfloat) (0 :: GLfloat)
+                                drawSingle block cs
+                -- draw next
+                case coords $ nxtBlock of
+                    Nothing -> return ()
+                    Just cs -> preservingMatrix $ do
+                        translate $ Vector3 (14 :: GLfloat) (2.25 :: GLfloat) (0 :: GLfloat)
+                        drawSingle nxtBlock cs
             -- draw pause overlay
             if p then drawPausedOverlay else return ()
     flush
+    where drawSingle blockType (c1,c2,c3,c4) = mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
 
 drawWorld :: Tetromino t => World t -> IO ()
 drawWorld world = 
@@ -74,20 +116,25 @@ drawBackdrop = do
         vertex $ Vertex3 ( 1/9  :: GLfloat) (-1     :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (-8/9  :: GLfloat) (-1     :: GLfloat) (0 :: GLfloat)
         -- lines until next level
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.375  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.375  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.25  :: GLfloat) (0.25   :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (0.25   :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (0.5    :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.25  :: GLfloat) (0.5    :: GLfloat) (0 :: GLfloat)
         -- score
         vertex $ Vertex3 (0.25  :: GLfloat) (0.625  :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.875 :: GLfloat) (0.625  :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.875 :: GLfloat) (0.875  :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.25  :: GLfloat) (0.875  :: GLfloat) (0 :: GLfloat)
+        -- hold
+        vertex $ Vertex3 (0.25  :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.25  :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
         -- next tile
-        vertex $ Vertex3 (0.25  :: GLfloat) (-0.25  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (-0.25  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.25  :: GLfloat) (-0.425 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (-0.425 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.875 :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
+        vertex $ Vertex3 (0.25  :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
 
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y = do

@@ -21,6 +21,7 @@ letterPath 'e' = [ (1   , 0   , 0)
                  , (0   , 1   , 0)
                  , (1   , 0.83, 0)
                  , (1   , 1   , 0) ]
+letterPath '0' = letterPath 'o' 
 letterPath 'o' = [ (1   , 2/7 , 0)
                  , (5/7 , 2/7 , 0)
                  , (1   , 5/7 , 0)

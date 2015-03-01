@@ -83,7 +83,23 @@ gameHandler queue game = do
 
 -- Handles the periodically dropping of the active block
 dropHandler :: TVar Game -> IO ()
-dropHandler game = undefined
+dropHandler game = do
+    f <- atomically $ do 
+        g <- readTVar game
+        case g of
+            GameMenu _ -> return (-1)
+            g@(Game w ls _ _ _ _ (_,((x1,y1), (x2,y2), (x3, y3), (x4,y4)))) -> do
+                if freeForBlock g ((x1,y1-1), (x2,y2-1), (x3,y3-1), (x4,y4-1))
+                then modifyTVar game shiftDown
+                else modifyTVar game placeAndNew
+                case ls of 
+                    []                 -> return (-1)
+                    ((Level _ freq):t) -> return freq
+    if f > 0
+    then do
+        addTimerCallback f (dropHandler game)
+        postRedisplay Nothing
+    else return ()
 
 -- Handles menu item selection
 menuHandler :: TVar [Key] -> TVar Game -> IO ()
@@ -112,11 +128,13 @@ menuHandler queue game = do
                 GameMenu Start         -> do
                     atomically $ writeTVar game defaultNewGame
                     addTimerCallback 16 (gameHandler queue game)
-                    --addTimerCallback (frequency $ level $ defaultNewGame) (dropHandler game)
-                g@(Game _ _ _ _ True  _ _)  -> do
+                    case levels defaultNewGame of
+                        []              -> return ()
+                        ((Level _ f):t) -> addTimerCallback f (dropHandler game)
+                g@(Game _ _ _ True _ _ _)  -> do
                     atomically $ writeTVar game $ g { paused = False}
                     addTimerCallback 16 (gameHandler queue game)
-                g@(Game _ _ _ _ False _ _) -> do 
+                g@(Game _ _ _ False _ _ _) -> do 
                     atomically $ writeTVar game $ g { paused = True }
                     addTimerCallback 16 (gameHandler queue game)
             postRedisplay Nothing
