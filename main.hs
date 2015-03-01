@@ -1,8 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 import Control.Concurrent.STM
 import Control.Concurrent
 import Graphics.UI.GLUT hiding (Level)
 import Control.Applicative
 import System.Exit
+import qualified Data.Map.Strict as Map
 
 import Util
 import Game
@@ -38,13 +41,12 @@ reshapeHandler size = do
     viewport    $= (Position (floor $ (fromIntegral (max (w - newsize) 0) / 2)) offsetY, Size newsize newsize)
     postRedisplay Nothing
 
-gameHandler :: TVar [Key] -> TVar Game -> IdleCallback
+gameHandler :: TVar [Key] -> TVar Game -> IO ()
 gameHandler queue game = do
     input <- readInput queue
     case input of
         Just (Char '\ESC') -> do                                                -- return to menu
             atomically $ writeTVar game $ GameMenu Start
-            idleCallback $= Just (menuHandler queue game)
             addTimerCallback 16 (menuHandler queue game)
             postRedisplay Nothing
         Just (Char '\r')   -> do
@@ -65,30 +67,59 @@ gameHandler queue game = do
         Just (SpecialKey KeyDown) -> do
             modifyAndDisplay game (\g -> shiftDown g)
             addTimerCallback 16 (gameHandler queue game)
-        _                  -> addTimerCallback 16 (gameHandler queue game)
+        Just (SpecialKey KeyUp) -> do
+            modifyAndDisplay game (\g -> spin g)
+            addTimerCallback 16 (gameHandler queue game)
+        _                  -> 
+            addTimerCallback 16 (gameHandler queue game)
     where togglePause g@(Game _ _ _ _ p _ _) = g { paused = not p }
           togglePause m                  = m
 
 shiftLeft :: Game -> Game
-shiftLeft game = shiftH game (+(-1))
+shiftLeft game = shiftBlockH game (+(-1))
 
 shiftRight :: Game -> Game
-shiftRight game = shiftH game (+1)
+shiftRight game = shiftBlockH game (+1)
 
 shiftDown :: Game -> Game
-shiftDown game = shiftV game (+(-1))
+shiftDown game = shiftBlockV game (+(-1))
 
-shiftH :: Game -> (Int -> Int) -> Game
-shiftH game op = game { activeBlock = newBlock }
-    where newBlock = let (blockType, x, y) = activeBlock game 
-                     in  (blockType, min 9 $ max 0 (op x), y)
+shiftUp :: Game -> Game
+shiftUp game = shiftBlockV game (+1)
 
-shiftV :: Game -> (Int -> Int) -> Game
-shiftV game op = game { activeBlock = newBlock }
-    where newBlock = let (blockType, x, y) = activeBlock game 
-                     in  (blockType, x, min 17 $ max 0 (op y))
+shiftBlockH :: Game -> (Int -> Int) -> Game
+shiftBlockH game op = shiftBlock game op id
 
-menuHandler :: TVar [Key] -> TVar Game -> IdleCallback
+shiftBlockV :: Game -> (Int -> Int) -> Game
+shiftBlockV game op = shiftBlock game id op
+
+shiftBlock :: Game -> (Int -> Int) -> (Int -> Int) -> Game
+shiftBlock game@(Game w l ls s p h (blockType, ((x1,y1),(x2,y2),(x3,y3),(x4,y4)))) opX opY = 
+    let newPos = ((opX x1, opY y1),(opX x2, opY y2),(opX x3, opY y3),(opX x4, opY y4))
+    in if freeForBlock game newPos
+       then Game w l ls s p h (blockType, newPos)
+       else game
+
+freeForBlock :: Game -> (Coord, Coord, Coord, Coord) -> Bool
+freeForBlock game (a,b,c,d) =  
+    and $ map (\(x,y) -> x >= 0 
+        && x < 10 
+        && y >= 0 
+        && y < 17 
+        && case Map.lookup (x,y) $ world game of
+            Nothing   -> True
+            Just Void -> True
+            _         -> False) [a,b,c,d]
+
+spin :: Game -> Game
+spin game@(Game w l ls s p h (blockType, coords@(cor,_,_,_))) = 
+    let rotated = rotateNormalized coords cor Clockwise
+    in if freeForBlock game rotated 
+       then Game w l ls s p h (blockType, rotated)
+       else game
+spin g = g
+
+menuHandler :: TVar [Key] -> TVar Game -> IO ()
 menuHandler queue game = do
     input <- readInput queue
     case input of

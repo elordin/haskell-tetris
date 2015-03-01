@@ -3,7 +3,7 @@ module Display where
 import Control.Concurrent.STM
 import Control.Applicative
 import Graphics.UI.GLUT hiding (Level)
-import Data.Map.Strict as Map
+import qualified Data.Map.Strict as Map
 
 import Util
 import Font
@@ -14,15 +14,14 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game _ _ _ _ _ _ _ -> do
+        Game _ _ _ _ _ _ (blockType, (c1,c2,c3,c4)) -> do
             drawBackdrop
             preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
                 scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
                 drawWorld $ world g
-                let (blockType, x, y) = activeBlock g
-                drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)
+                mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
             if paused g then drawPausedOverlay else return ()
     flush
 
