@@ -33,7 +33,7 @@ shiftBlockV game op = shiftBlock game id op
 shiftBlock :: Game -> (Int -> Int) -> (Int -> Int) -> Game
 shiftBlock game@(Game w l ls s p h (blockType, ((x1,y1),(x2,y2),(x3,y3),(x4,y4)))) opX opY = 
     let newPos = ((opX x1, opY y1),(opX x2, opY y2),(opX x3, opY y3),(opX x4, opY y4))
-    in if freeForBlock game newPos
+    in if not p && freeForBlock game newPos
        then Game w l ls s p h (blockType, newPos)
        else game
 
@@ -42,7 +42,7 @@ freeForBlock (Game w _ _ _ _ _ _) (a,b,c,d) =
     and $ map (\(x,y) -> x >= 0 
         && x < 10 
         && y >= 0 
-        && y < 17 
+        && y < 18 
         && case Map.lookup (x,y) w of
             Nothing   -> True
             Just b    -> case coords b of 
@@ -56,3 +56,19 @@ freeForBlock (Game w _ _ _ _ _ _) (a,b,c,d) =
 --       then Game w l ls s p h (blockType, rotated)
 --       else game
 --spin g = g
+
+dropDown :: Game -> Game
+dropDown = (foldl (\f _ -> shiftDown.f) shiftDown [1..17])
+
+holdBlock :: Game -> Game
+holdBlock game@(Game w l ls s p h (a,_)) = 
+    case h of
+        Nothing -> game
+        Just ho -> 
+            case coords ho of 
+                Nothing -> game
+                Just ((x1,y1), (x2,y2), (x3, y3), (x4,y4)) -> 
+                    Game w l ls s p (Just a) (ho, ( (x1+4,y1+16) 
+                                                  , (x2+4,y2+16)
+                                                  , (x3+4,y3+16)
+                                                  , (x4+4,y4+16) ) )

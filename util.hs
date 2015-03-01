@@ -82,7 +82,7 @@ defaultNewGame =
          [{-- level definitions --}] 
          0 
          False 
-         Nothing 
+         (Just Ob)
          ((\rnd -> let n = fst $ randomR (0, 6) rnd
                        b :: Block
                        b = toEnum n 

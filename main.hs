@@ -1,5 +1,4 @@
 import Control.Concurrent.STM
-import Control.Concurrent
 import Graphics.UI.GLUT hiding (Level)
 import System.Exit
 import System.Random
@@ -17,18 +16,20 @@ main :: IO ()
 main = do
     initialWindowSize     $= Size windowWidth windowHeight
     getArgsAndInitialize
-    window   <- createWindow "Tretis"
-    queue    <- newTVarIO []
-    paused   <- newTVarIO True
-    game     <- newTVarIO $ GameMenu Start
+    window                <- createWindow "Tretis"
+    queue                 <- newTVarIO []
+    paused                <- newTVarIO True
+    game                  <- newTVarIO $ GameMenu Start
     viewport              $= (Position 0 0, Size windowWidth windowHeight)
     displayCallback       $= displayGame game
     reshapeCallback       $= Just reshapeHandler
     keyboardMouseCallback $= Just (keyboardHandler queue paused)
     addTimerCallback 16 (menuHandler queue game)    
-    --fullScreen
+    fullScreen
     mainLoop
 
+-- Helpers
+-- -----------------------------------------------------------------------------
 modifyAndDisplay :: TVar Game -> (Game -> Game) -> IO ()
 modifyAndDisplay game action = do
     atomically $ modifyTVar game action
@@ -45,7 +46,6 @@ readInput queue = atomically $ do
 
 -- WINDOW HANDLERS
 -- -----------------------------------------------------------------------------
-
 reshapeHandler :: ReshapeCallback
 reshapeHandler size = do
     let Size w h = size
@@ -56,6 +56,7 @@ reshapeHandler size = do
     viewport    $= (Position (floor $ (fromIntegral (max (w - newsize) 0) / 2)) offsetY, Size newsize newsize)
     postRedisplay Nothing
 
+-- Handles keyboard input during the game
 gameHandler :: TVar [Key] -> TVar Game -> IO ()
 gameHandler queue game = do
     input <- readInput queue
@@ -64,55 +65,46 @@ gameHandler queue game = do
             atomically $ writeTVar game $ GameMenu Start
             addTimerCallback 16 (menuHandler queue game)
             postRedisplay Nothing
-        Just (Char '\r')            -> do
-            modifyAndDisplay game togglePause
+        Just (Char '\r')            -> modAndPlay togglePause
+        Just (Char '\n')            -> modAndPlay togglePause
+        Just (Char 'p' )            -> modAndPlay togglePause
+        Just (SpecialKey KeyLeft)   -> modAndPlay shiftLeft
+        Just (SpecialKey KeyRight)  -> modAndPlay shiftRight
+        Just (SpecialKey KeyDown)   -> modAndPlay shiftDown
+        --Just (SpecialKey KeyUp)     -> modAndPlay spin
+        Just (Char ' ')             -> modAndPlay dropDown
+        Just (SpecialKey KeyShiftR) -> modAndPlay holdBlock
+        _                           ->
             addTimerCallback 16 (gameHandler queue game)
-        Just (Char '\n')            -> do
-            modifyAndDisplay game togglePause
-            addTimerCallback 16 (gameHandler queue game)
-        Just (Char 'p' )            -> do
-            modifyAndDisplay game togglePause
-            addTimerCallback 16 (gameHandler queue game)
-        Just (SpecialKey KeyLeft)   -> do
-            modifyAndDisplay game shiftLeft
-            addTimerCallback 16 (gameHandler queue game)
-        Just (SpecialKey KeyRight)  -> do
-            modifyAndDisplay game shiftRight
-            addTimerCallback 16 (gameHandler queue game)
-        Just (SpecialKey KeyDown)   -> do
-            modifyAndDisplay game shiftDown
-            addTimerCallback 16 (gameHandler queue game)
-        --Just (SpecialKey KeyUp)     -> do
-        --    modifyAndDisplay game spin
-        --    addTimerCallback 16 (gameHandler queue game)
-        --Just (Char ' ') -> do
-        --    modifyAndDisplay game drop
-        --    addTimerCallback 16 (gameHandler queue game)
-        --Just (SpecialKey KeyShiftR) -> do
-        --    modifyAndDisplay game hold
-        --    addTimerCallback 16 (gameHandler queue game)
-        _                  ->
+    where modAndPlay :: (Game -> Game) -> IO ()
+          modAndPlay modifier = do
+            modifyAndDisplay game modifier
             addTimerCallback 16 (gameHandler queue game)
 
+-- Handles the periodically dropping of the active block
 dropHandler :: TVar Game -> IO ()
 dropHandler game = undefined
 
+-- Handles menu item selection
 menuHandler :: TVar [Key] -> TVar Game -> IO ()
 menuHandler queue game = do
     input <- readInput queue
     case input of
         Just (Char '\ESC')        -> exitSuccess
-        Just (SpecialKey KeyUp)   -> do modifyAndDisplay game toggleMenuItem
-                                        addTimerCallback 16 (menuHandler queue game)
-        Just (SpecialKey KeyDown) -> do modifyAndDisplay game toggleMenuItem
-                                        addTimerCallback 16 (menuHandler queue game)
-
-        Just (Char '\n')          -> do { select; postRedisplay Nothing }
-        Just (Char '\r')          -> do { select; postRedisplay Nothing }
+        Just (SpecialKey KeyUp)   -> toggleMenuItem
+        Just (SpecialKey KeyDown) -> toggleMenuItem
+        Just (Char '\n')          -> select
+        Just (Char '\r')          -> select
         _                         -> addTimerCallback 16 (menuHandler queue game)
-    where toggleMenuItem (GameMenu Start) = GameMenu Quit
-          toggleMenuItem (GameMenu Quit)  = GameMenu Start
-          toggleMenuItem g = g
+    where toggleMenuItem = do
+            atomically $ 
+                modifyTVar game 
+                    (\g -> case g of
+                            GameMenu Start -> GameMenu Quit
+                            GameMenu Quit  -> GameMenu Start
+                            g              -> g)
+            postRedisplay Nothing
+            addTimerCallback 16 (menuHandler queue game) 
           select = do
             g <- atomically $ readTVar game
             case g of
@@ -127,3 +119,4 @@ menuHandler queue game = do
                 g@(Game _ _ _ _ False _ _) -> do 
                     atomically $ writeTVar game $ g { paused = True }
                     addTimerCallback 16 (gameHandler queue game)
+            postRedisplay Nothing
