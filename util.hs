@@ -22,9 +22,10 @@ class Tetromino a where
     -- colour scheme from the outside in
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
     -- initial coordinates, centre of rotation should be first
-    coords :: a -> Maybe (Coord, Coord, Coord, Coord)
+    coords :: a -> (Coord, Coord, Coord, Coord)
+    randomTetromino :: a
 
-data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb | Void
+data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb
     deriving(Eq, Enum)
 instance Show Block where
     show Tb   = "T"
@@ -34,8 +35,9 @@ instance Show Block where
     show Sb   = "S"
     show Lb   = "L"
     show Zb   = "Z"
-    show Void = " "
 instance Tetromino Block where
+    randomTetromino = Tb
+
     colorScheme Zb   = (black, lightG, lightG, black )
     colorScheme Sb   = (black, darkG,  black,  white )
     colorScheme Ob   = (black, white,  black,  black )
@@ -43,16 +45,14 @@ instance Tetromino Block where
     colorScheme Jb   = (black, lightG, black,  white )
     colorScheme Lb   = (black, darkG,  darkG,  darkG )
     colorScheme Tb   = (black, lightG, black,  lightG)
-    colorScheme Void = (white, white,  white,  white )
 
-    coords Zb   = Just ((0, 0), (-1,  1), ( 0, 1), (1, 0))
-    coords Sb   = Just ((0, 0), (-1,  0), ( 0, 1), (1, 1))
-    coords Ob   = Just ((0, 0), ( 0,  1), ( 1, 0), (1, 1))
-    coords Ib   = Just ((0, 0), ( -1, 0), ( 1, 0), (2, 0))
-    coords Jb   = Just ((0, 0), (-1,  1), (-1, 0), (1, 0))
-    coords Lb   = Just ((0, 0), (-1,  0), ( 1, 0), (1, 1))
-    coords Tb   = Just ((0, 0), (-1,  0), ( 0, 1), (1, 0))
-    coords Void = Nothing
+    coords Zb   = ((0, 0), (-1,  1), ( 0, 1), (1, 0))
+    coords Sb   = ((0, 0), (-1,  0), ( 0, 1), (1, 1))
+    coords Ob   = ((0, 0), ( 0,  1), ( 1, 0), (1, 1))
+    coords Ib   = ((0, 0), ( -1, 0), ( 1, 0), (2, 0))
+    coords Jb   = ((0, 0), (-1,  1), (-1, 0), (1, 0))
+    coords Lb   = ((0, 0), (-1,  0), ( 1, 0), (1, 1))
+    coords Tb   = ((0, 0), (-1,  0), ( 0, 1), (1, 0))
 
 type World t = Map.Map (Int, Int) t
 
@@ -71,6 +71,7 @@ data Game where
                            , nextBlock   :: t
                            , activeBlock :: (t, (Coord, Coord, Coord, Coord)) } -> Game
     GameMenu :: MItem -> Game
+    --GameOver :: Game
 
 defaultNewGame = 
     Game (fst $ foldr (\k (m,rnd) -> 
@@ -86,12 +87,11 @@ defaultNewGame =
          ((\rnd -> let n = fst $ randomR (0, 6) rnd
                        b :: Block
                        b = toEnum n 
-                       c = case coords b of
-                            Nothing -> ((0,0), (0,0), (0,0), (0,0))
-                            Just ((x1,y1), (x2,y2), (x3, y3), (x4,y4)) -> ( (x1+4,y1+12)
-                                                                          , (x2+4,y2+12)
-                                                                          , (x3+4,y3+12)
-                                                                          , (x4+4,y4+12) )
+                       ((x1,y1), (x2,y2), (x3, y3), (x4,y4)) = coords b
+                       c = ( (x1+4,y1+12)
+                           , (x2+4,y2+12)
+                           , (x3+4,y3+12)
+                           , (x4+4,y4+12) )
                    in (b, c)) $ mkStdGen 10)
 
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
@@ -110,3 +110,10 @@ rotateNormalized (o1, o2, o3, o4) (cx, cy) r =
           (o2nx, o2ny)    = normalize o2
           (o3nx, o3ny)    = normalize o3
           (o4nx, o4ny)    = normalize o4
+
+scorePerLines :: Int -> Int
+scorePerLines 4 = 1000
+scorePerLines 3 =  500
+scorePerLines 2 =  250
+scorePerLines 1 =  100
+scorePerLines _ =    0

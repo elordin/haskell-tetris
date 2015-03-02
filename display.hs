@@ -42,7 +42,9 @@ displayGame tGame = do
                 vertex $ Vertex3 (0.875 :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
                 vertex $ Vertex3 (0.25  :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
 
-            preservingMatrix $ do
+            if p 
+            then drawPausedOverlay 
+            else preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
                 scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
@@ -54,19 +56,12 @@ displayGame tGame = do
                 case h of
                     Nothing    -> return ()
                     Just block -> preservingMatrix $ do
-                        case coords block of 
-                            Nothing -> return ()
-                            Just cs -> do
-                                translate $ Vector3 (14 :: GLfloat) (7.25 :: GLfloat) (0 :: GLfloat)
-                                drawSingle block cs
+                        translate $ Vector3 (14 :: GLfloat) (7.25 :: GLfloat) (0 :: GLfloat)
+                        drawSingle block $ coords block
                 -- draw next
-                case coords $ nxtBlock of
-                    Nothing -> return ()
-                    Just cs -> preservingMatrix $ do
-                        translate $ Vector3 (14 :: GLfloat) (2.25 :: GLfloat) (0 :: GLfloat)
-                        drawSingle nxtBlock cs
-            -- draw pause overlay
-            if p then drawPausedOverlay else return ()
+                preservingMatrix $ do
+                    translate $ Vector3 (14 :: GLfloat) (2.25 :: GLfloat) (0 :: GLfloat)
+                    drawSingle nxtBlock $ coords nxtBlock
     flush
     where drawSingle blockType (c1,c2,c3,c4) = mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
 
@@ -135,7 +130,16 @@ drawBackdrop = do
         vertex $ Vertex3 (0.875 :: GLfloat) (-0.425 :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.875 :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
         vertex $ Vertex3 (0.25  :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
-
+    drawCaptionAt 0.875 "Score"
+    drawCaptionAt 0.5 "Lines"
+    drawCaptionAt 0.125 "Hold"
+    drawCaptionAt (-0.425) "Next"
+    where drawCaptionAt y caption = 
+            preservingMatrix $ do 
+                translate $ Vector3 (0.25 :: GLfloat) (y :: GLfloat) (0 :: GLfloat)
+                scale (0.05 :: GLfloat) (0.05 :: GLfloat) (1 :: GLfloat)
+                renderCustomText caption
+            
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y = do
     preservingMatrix $ do

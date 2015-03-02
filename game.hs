@@ -3,10 +3,7 @@ module Game where
 import Control.Concurrent.STM
 import Graphics.UI.GLUT hiding (Level)
 import qualified Data.Map.Strict as Map
-import System.Random
 
---import KeyboardHandler
---import Display
 import Util
 
 togglePause :: Game -> Game
@@ -46,9 +43,7 @@ freeForBlock (Game w _ _ _ _ _ _) (a,b,c,d) =
         && y < 18 
         && case Map.lookup (x,y) w of
             Nothing   -> True
-            Just b    -> case coords b of 
-                Nothing -> True
-                Just _  -> False) [a,b,c,d]
+            Just b    -> False) [a,b,c,d]
 
 spin :: Game -> Game
 spin game@(Game w ls s p h n (blockType, coords@(cor, _, _, _))) =
@@ -67,19 +62,23 @@ holdBlock game@(Game w ls s p (h,ch) n (a,_)) =
     then game 
     else case h of
             Nothing -> game
-            Just ho -> 
-                case coords ho of 
-                    Nothing -> game
-                    Just ((x1,y1), (x2,y2), (x3, y3), (x4,y4)) -> 
-                        Game w ls s p (Just a, False) n (ho, ( (x1+4,y1+16) 
-                                                      , (x2+4,y2+16)
-                                                      , (x3+4,y3+16)
-                                                      , (x4+4,y4+16) ) )
+            Just ho -> Game w ls s p (Just a, False) n (ho, pushToTop $ coords ho)
 
 placeAndNew :: Game -> Game
-placeAndNew game = game
-    -- place activeBlock in world
-    -- remove complete lines and increase score
-    -- get new piece and 
+placeAndNew m@(GameMenu _) = m  
+placeAndNew g@(Game _ [] _ _ _ _ _) = g 
+placeAndNew (Game w ((Level l f):ls) s p (h,ch) nb ab) = 
+    Game newWorld ((Level l f):ls) (s + (scorePerLines completeLines)) p (h,True) drawRandomBlock (nb, pushToTop $ coords nb)
+    where (newWorld, completeLines) = clearOutCompleteLines $ insertToWorld w ab
+          clearOutCompleteLines :: Tetromino t => World t -> (World t, Int)
+          clearOutCompleteLines targetWorld = (targetWorld, 1)
+          
+          insertToWorld :: World t -> (t, (Coord, Coord, Coord, Coord)) -> World t
+          insertToWorld targetWorld (blockType, (c1,c2,c3,c4)) = 
+              foldr (\k m -> Map.insert k blockType m) targetWorld [c1,c2,c3,c4]
+          drawRandomBlock :: Tetromino t => t
+          drawRandomBlock = randomTetromino
 
---clearFullLines :: Game -> Game 
+pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
+pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
+                          in (push c1, push c2, push c3, push c4)
