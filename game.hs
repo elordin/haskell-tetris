@@ -68,16 +68,21 @@ placeAndNew :: Game -> Game
 placeAndNew m@(GameMenu _) = m  
 placeAndNew g@(Game _ [] _ _ _ _ _) = g 
 placeAndNew (Game w ((Level l f):ls) s p (h,ch) nb ab) = 
-    Game newWorld ((Level l f):ls) (s + (scorePerLines completeLines)) p (h,True) drawRandomBlock (nb, pushToTop $ coords nb)
+    Game newWorld newLevels (s + (scorePerLines completeLines)) p (h,True) drawRandomBlock (nb, pushToTop $ coords nb)
     where (newWorld, completeLines) = clearOutCompleteLines $ insertToWorld w ab
           clearOutCompleteLines :: Tetromino t => World t -> (World t, Int)
           clearOutCompleteLines targetWorld = (targetWorld, 1)
-          
           insertToWorld :: World t -> (t, (Coord, Coord, Coord, Coord)) -> World t
           insertToWorld targetWorld (blockType, (c1,c2,c3,c4)) = 
               foldr (\k m -> Map.insert k blockType m) targetWorld [c1,c2,c3,c4]
           drawRandomBlock :: Tetromino t => t
           drawRandomBlock = randomTetromino
+          newLevels :: [Level]
+          newLevels = if l - completeLines > 0
+                      then (Level (l - completeLines) f):ls
+                      else case ls of
+                            []    -> [Level 0 f]
+                            ((Level nl nf):t) -> (Level (nl + l - completeLines) nf):t 
 
 pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
 pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
