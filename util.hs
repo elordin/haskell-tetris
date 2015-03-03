@@ -23,7 +23,8 @@ class Tetromino a where
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
     -- initial coordinates, centre of rotation should be first
     coords :: a -> (Coord, Coord, Coord, Coord)
-    randomTetromino :: a
+    randomTetromino :: Int -> a
+
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb
     deriving(Eq, Enum)
@@ -36,7 +37,7 @@ instance Show Block where
     show Lb   = "L"
     show Zb   = "Z"
 instance Tetromino Block where
-    randomTetromino = Tb
+    randomTetromino i = toEnum $ mod i 6
 
     colorScheme Zb   = (black, lightG, lightG, black )
     colorScheme Sb   = (black, darkG,  black,  white )
@@ -69,30 +70,28 @@ data Game where
                            , paused      :: Bool
                            , hold        :: (Maybe t, Bool)
                            , nextBlock   :: t
-                           , activeBlock :: (t, (Coord, Coord, Coord, Coord)) } -> Game
+                           , activeBlock :: (t, (Coord, Coord, Coord, Coord)) 
+                           , rnds        :: [Int] } -> Game
     GameMenu :: MItem -> Game
     --GameOver :: Game
 
-defaultNewGame = 
-    Game (fst $ foldr (\k (m,rnd) -> 
-            let c = randomR (0, 100) rnd 
-            in if (fst c :: Int) > 50 
-               then (Map.insert k Sb m, snd c) 
-               else (m, snd c)) (Map.empty, mkStdGen 10) $ concatMap (\n -> map (\m -> (n,m)) [0..5]) [0..9]) 
+defaultNewGame :: Int -> Game
+defaultNewGame seed = 
+    Game Map.empty
          [(Level 10 500)] 
          0
          False 
          (Just Ob, True)
          Lb
-         ((\rnd -> let n = fst $ randomR (0, 6) rnd
-                       b :: Block
-                       b = toEnum n 
-                       ((x1,y1), (x2,y2), (x3, y3), (x4,y4)) = coords b
-                       c = ( (x1+4,y1+12)
-                           , (x2+4,y2+12)
-                           , (x3+4,y3+12)
-                           , (x4+4,y4+12) )
-                   in (b, c)) $ mkStdGen 10)
+         (firstActiveBlock, pushToTop $ coords firstActiveBlock)
+         rnds
+    where i:rnds = randomRs (0,6) $ mkStdGen seed
+          firstActiveBlock :: Block
+          firstActiveBlock = randomTetromino i 
+
+pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
+pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
+                          in (push c1, push c2, push c3, push c4)
 
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
 rotateNormalized (o1, o2, o3, o4) (cx, cy) r =

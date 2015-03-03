@@ -88,7 +88,7 @@ dropHandler game = do
         g <- readTVar game
         case g of
             GameMenu _ -> return (-1)
-            g@(Game w ls _ _ _ _ (_,((x1,y1), (x2,y2), (x3, y3), (x4,y4)))) -> do
+            g@(Game w ls _ _ _ _ (_,((x1,y1), (x2,y2), (x3, y3), (x4,y4))) _) -> do
                 if freeForBlock g ((x1,y1-1), (x2,y2-1), (x3,y3-1), (x4,y4-1))
                 then modifyTVar game shiftDown
                 else modifyTVar game placeAndNew
@@ -126,15 +126,17 @@ menuHandler queue game = do
             case g of
                 GameMenu Quit          -> exitSuccess
                 GameMenu Start         -> do
-                    atomically $ writeTVar game defaultNewGame
+                    seed <- getStdRandom (randomR (1, 10000)) 
+                    let newGame = defaultNewGame seed
+                    atomically $ writeTVar game newGame
                     addTimerCallback 16 (gameHandler queue game)
-                    case levels defaultNewGame of
+                    case levels newGame of
                         []              -> return ()
                         ((Level _ f):t) -> addTimerCallback f (dropHandler game)
-                g@(Game _ _ _ True _ _ _)  -> do
+                g@(Game _ _ _ True _ _ _ _)  -> do
                     atomically $ writeTVar game $ g { paused = False}
                     addTimerCallback 16 (gameHandler queue game)
-                g@(Game _ _ _ False _ _ _) -> do 
+                g@(Game _ _ _ False _ _ _ _) -> do 
                     atomically $ writeTVar game $ g { paused = True }
                     addTimerCallback 16 (gameHandler queue game)
             postRedisplay Nothing

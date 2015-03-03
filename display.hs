@@ -14,7 +14,7 @@ displayGame tGame = do
     g <- atomically $ readTVar tGame
     case g of
         GameMenu i     -> drawMenu i
-        Game w ls s p (h, ch) nxtBlock (blockType, cs) -> do
+        Game w ls s p (h, ch) nxtBlock (blockType, cs) _ -> do
             drawBackdrop
 
             -- draw score and lines 2 go text
