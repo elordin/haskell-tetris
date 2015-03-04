@@ -7,22 +7,17 @@ import qualified Data.Map.Strict as Map
 import System.Random
 import Data.Time.Clock
 
--- 'Constants' definitions
--- Colours
 white  = color $ Color3 (1 :: GLfloat) (1 :: GLfloat) (1 :: GLfloat)
 gray   = color $ Color3 (0.5 :: GLfloat) (0.5 :: GLfloat) (0.5 :: GLfloat)
 black  = color $ Color3 (0 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
 lightG = color $ Color3 (0.6 :: GLfloat) (0.8 :: GLfloat) (0.6 :: GLfloat)
 darkG  = color $ Color3 (0.2 :: GLfloat) (0.3 :: GLfloat) (0.2 :: GLfloat)
 
--- Data definitions
 type Coord = (Int, Int)
 data Rotation = Clockwise | CounterClockwise
 class Tetromino a where
-    -- colour scheme from the outside in
-    colorScheme :: a -> (IO (), IO (), IO (), IO ())
-    -- initial coordinates, centre of rotation should be first
-    coords :: a -> (Coord, Coord, Coord, Coord)
+    colorScheme     :: a -> (IO (), IO (), IO (), IO ())
+    coords          :: a -> (Coord, Coord, Coord, Coord)
     randomTetromino :: Int -> a
 
 
@@ -72,8 +67,9 @@ data Game where
                            , nextBlock   :: t
                            , activeBlock :: (t, (Coord, Coord, Coord, Coord)) 
                            , rnds        :: [Int] } -> Game
-    GameMenu :: MItem -> Game
-    --GameOver :: Game
+    GameMenu  :: MItem -> Game
+    GameOver  :: Game
+    GameError :: String -> Game
 
 defaultNewGame :: Int -> Game
 defaultNewGame seed = 
@@ -116,3 +112,6 @@ scorePerLines 3 =  500
 scorePerLines 2 =  250
 scorePerLines 1 =  100
 scorePerLines _ =    0
+
+vx3 :: GLfloat -> GLfloat -> GLfloat -> Vertex3 GLfloat
+vx3 x y z = Vertex3 x y z

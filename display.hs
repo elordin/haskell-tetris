@@ -13,6 +13,7 @@ displayGame tGame = do
     clear [ColorBuffer]
     g <- atomically $ readTVar tGame
     case g of
+        GameOver       -> return ()
         GameMenu i     -> drawMenu i
         Game w ls s p (h, ch) nxtBlock (blockType, cs) _ -> do
             drawBackdrop
@@ -37,11 +38,10 @@ displayGame tGame = do
             then return () 
             else renderPrimitive Quads $ do
                 gray
-                vertex $ Vertex3 (0.25  :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 (0.875 :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 (0.875 :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 (0.25  :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
-
+                vertex $ vx3 0.25 0.125 0
+                vertex $ vx3 0.875 0.125 0
+                vertex $ vx3 0.875 (-0.3) 0
+                vertex $ vx3 0.25 (-0.3) 0
             if p 
             then drawPausedOverlay 
             else preservingMatrix $ do
@@ -86,15 +86,15 @@ drawPausedOverlay :: IO ()
 drawPausedOverlay = do
     renderPrimitive Quads $ do
         black
-        vertex $ Vertex3 (-0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.26 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) ( 0.26 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.51)   0.26  0
+        vertex $ vx3 (-0.51) (-0.26) 0
+        vertex $ vx3   0.51  (-0.26) 0
+        vertex $ vx3   0.51    0.26  0
         white
-        vertex $ Vertex3 (-0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.5 :: GLfloat) (-0.25 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.5 :: GLfloat) ( 0.25 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.5)   0.25  0
+        vertex $ vx3 (-0.5) (-0.25) 0
+        vertex $ vx3   0.5  (-0.25) 0
+        vertex $ vx3   0.5    0.25  0
     black
     preservingMatrix $ do
         translate $ Vector3 (-0.4 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
@@ -106,30 +106,31 @@ drawBackdrop = do
     renderPrimitive Quads $ do
         -- playing field
         white
-        vertex $ Vertex3 (-8/9  :: GLfloat) ( 1     :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 1/9  :: GLfloat) ( 1     :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 1/9  :: GLfloat) (-1     :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-8/9  :: GLfloat) (-1     :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-8/9)   1 0
+        vertex $ vx3 ( 1/9)   1 0
+        vertex $ vx3 ( 1/9) (-1) 0
+        vertex $ vx3 (-8/9) (-1) 0
+
         -- lines until next level
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.25   :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.25   :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.5    :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.5    :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 0.25  0.25   0
+        vertex $ vx3 0.875 0.25   0
+        vertex $ vx3 0.875 0.5    0
+        vertex $ vx3 0.25  0.5    0
         -- score
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.625  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.625  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.875  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.875  :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 0.25  0.625  0
+        vertex $ vx3 0.875 0.625  0
+        vertex $ vx3 0.875 0.875  0
+        vertex $ vx3 0.25  0.875  0
         -- hold
-        vertex $ Vertex3 (0.25  :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (0.125  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (-0.3  :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 0.25    0.125   0
+        vertex $ vx3 0.875   0.125   0
+        vertex $ vx3 0.875 (-0.3  )  0
+        vertex $ vx3 0.25  (-0.3  )  0
         -- next tile
-        vertex $ Vertex3 (0.25  :: GLfloat) (-0.425 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (-0.425 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.875 :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (0.25  :: GLfloat) (-0.85 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 0.25  (-0.425) 0
+        vertex $ vx3 0.875 (-0.425) 0
+        vertex $ vx3 0.875 (-0.85 ) 0
+        vertex $ vx3 0.25  (-0.85 ) 0
     drawCaptionAt 0.875 "Score"
     drawCaptionAt 0.5 "Lines"
     drawCaptionAt 0.125 "Hold"
@@ -149,25 +150,25 @@ drawBlockAt block x y = do
 drawBlock :: Tetromino t => t -> IO ()
 drawBlock block = renderPrimitive Quads $ do
     c1
-    vertex $ Vertex3 (0    :: GLfloat) (0    :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0    :: GLfloat) (1    :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (1    :: GLfloat) (1    :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (1    :: GLfloat) (0    :: GLfloat) (0 :: GLfloat)
+    vertex $ vx3 0    0    0
+    vertex $ vx3 0    1    0
+    vertex $ vx3 1    1    0
+    vertex $ vx3 1    0    0
     c2
-    vertex $ Vertex3 (0.06 :: GLfloat) (0.06 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.06 :: GLfloat) (0.94 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.94 :: GLfloat) (0.94 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.94 :: GLfloat) (0.06 :: GLfloat) (0 :: GLfloat)
+    vertex $ vx3 0.06 0.06 0
+    vertex $ vx3 0.06 0.94 0
+    vertex $ vx3 0.94 0.94 0
+    vertex $ vx3 0.94 0.06 0
     c3
-    vertex $ Vertex3 (0.32 :: GLfloat) (0.32 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.32 :: GLfloat) (0.68 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.68 :: GLfloat) (0.68 :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.68 :: GLfloat) (0.32 :: GLfloat) (0 :: GLfloat)
+    vertex $ vx3 0.32 0.32 0
+    vertex $ vx3 0.32 0.68 0
+    vertex $ vx3 0.68 0.68 0
+    vertex $ vx3 0.68 0.32 0
     c4
-    vertex $ Vertex3 (0.4  :: GLfloat) (0.4  :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.4  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.6  :: GLfloat) (0.6  :: GLfloat) (0 :: GLfloat)
-    vertex $ Vertex3 (0.6  :: GLfloat) (0.4  :: GLfloat) (0 :: GLfloat)
+    vertex $ vx3 0.4  0.4  0
+    vertex $ vx3 0.4  0.6  0
+    vertex $ vx3 0.6  0.6  0
+    vertex $ vx3 0.6  0.4  0
     where (c1, c2, c3, c4) = colorScheme block
 
 drawMenu :: MItem -> IO ()
@@ -176,36 +177,36 @@ drawMenu active = do
         lightG
         case active of
             Start -> do
-                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.53  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.53  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.695 :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.695 :: GLfloat) (0 :: GLfloat)
+                vertex $ vx3 (-0.52) (-0.53)  0
+                vertex $ vx3   0.52  (-0.53)  0
+                vertex $ vx3   0.52  (-0.695) 0
+                vertex $ vx3 (-0.52) (-0.695) 0
             Quit  -> do
-                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.73  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.73  :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 ( 0.52 :: GLfloat) (-0.895 :: GLfloat) (0 :: GLfloat)
-                vertex $ Vertex3 (-0.52 :: GLfloat) (-0.895 :: GLfloat) (0 :: GLfloat)
+                vertex $ vx3 (-0.52) (-0.73 ) 0
+                vertex $ vx3   0.52  (-0.73 ) 0
+                vertex $ vx3   0.52  (-0.895) 0
+                vertex $ vx3 (-0.52) (-0.895) 0
         black
-        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.74  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.74  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.885 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.885 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.51) (-0.74 ) 0
+        vertex $ vx3   0.51  (-0.74 ) 0
+        vertex $ vx3   0.51  (-0.885) 0
+        vertex $ vx3 (-0.51) (-0.885) 0
 
-        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.54  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.54  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.51 :: GLfloat) (-0.685 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.51 :: GLfloat) (-0.685 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.51) (-0.54 ) 0
+        vertex $ vx3   0.51  (-0.54 ) 0
+        vertex $ vx3   0.51  (-0.685) 0
+        vertex $ vx3 (-0.51) (-0.685) 0
 
         white
-        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.75  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.75  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.875 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.50) (-0.75 ) 0
+        vertex $ vx3   0.50  (-0.75 ) 0
+        vertex $ vx3   0.50  (-0.875) 0
+        vertex $ vx3 (-0.50) (-0.875) 0
 
-        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.55  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.55  :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 ( 0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
-        vertex $ Vertex3 (-0.50 :: GLfloat) (-0.675 :: GLfloat) (0 :: GLfloat)
+        vertex $ vx3 (-0.50) (-0.55 ) 0
+        vertex $ vx3   0.50  (-0.55 ) 0
+        vertex $ vx3   0.50  (-0.675) 0
+        vertex $ vx3 (-0.50) (-0.675) 0
     preservingMatrix $ do 
         lightG
         translate $ Vector3 (0 :: GLfloat) (0.25::GLfloat) (0::GLfloat)
