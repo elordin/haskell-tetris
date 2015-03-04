@@ -74,10 +74,10 @@ data Game where
 defaultNewGame :: Int -> Game
 defaultNewGame seed = 
     Game Map.empty
-         [(Level 10 500)] 
+         [Level 10 500, Level 15 400, Level 25 300] 
          0
          False 
-         (Just Ob, True)
+         (Nothing, True)
          Lb
          (firstActiveBlock, pushToTop $ coords firstActiveBlock)
          rnds

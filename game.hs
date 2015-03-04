@@ -61,12 +61,20 @@ dropDown :: Game -> Game
 dropDown = (foldl (\f _ -> shiftDown.f) shiftDown [1..17])
 
 holdBlock :: Game -> Game
-holdBlock game@(Game w ls s p (h,ch) n (a,_) rg) = 
+holdBlock (Game _ _ _ _ _ _ _ []) = GameError "Out of random numbers."
+holdBlock game@(Game w ls s p (h,ch) n (a,_) (rnd:rnds)) = 
     if p || not ch 
     then game 
     else case h of
-            Nothing -> game
-            Just ho -> Game w ls s p (Just a, False) n (ho, pushToTop $ coords ho) rg
+            Nothing -> if freeForBlock game newPos 
+                       then Game w ls s p (Just a, False) newRandomBlock (n, newPos) rnds
+                       else GameOver 
+            Just ho -> let holdPos = pushToTop $ coords ho
+                       in if freeForBlock game holdPos
+                          then Game w ls s p (Just a, False) n (ho, holdPos) rnds
+                          else GameOver
+    where newRandomBlock = randomTetromino rnd
+          newPos         = pushToTop $ coords newRandomBlock
 holdBlock other = other
 
 placeAndNew :: Game -> Game
