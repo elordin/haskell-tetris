@@ -19,7 +19,7 @@ displayGame tGame = do
             drawBackdrop
 
             -- draw score and lines 2 go text
-            let lines2go = case ls of 
+            let lines2go = case ls of
                             []              -> 0
                             ((Level l _):t) -> l
             preservingMatrix $ do
@@ -35,19 +35,19 @@ displayGame tGame = do
 
             -- redraw hold area in gray if already held a block
             if ch
-            then return () 
+            then return ()
             else renderPrimitive Quads $ do
                 gray
                 vertex $ vx3 0.25 0.125 0
                 vertex $ vx3 0.875 0.125 0
                 vertex $ vx3 0.875 (-0.3) 0
                 vertex $ vx3 0.25 (-0.3) 0
-            if p 
-            then drawPausedOverlay 
+            if p
+            then drawPausedOverlay
             else preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
-                scale (0.1 :: GLfloat) (2/18 :: GLfloat) (1 :: GLfloat)
+                scale (1/(fromIntegral blocksX) :: GLfloat) (2/(fromIntegral blocksY) :: GLfloat) (1 :: GLfloat)
                 -- draw world
                 drawWorld $ w
                 -- draw active block
@@ -66,20 +66,20 @@ displayGame tGame = do
     where drawSingle blockType (c1,c2,c3,c4) = mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
 
 drawWorld :: Tetromino t => World t -> IO ()
-drawWorld world = 
+drawWorld world =
     mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ Map.toList world
 
 renderCustomText :: String -> IO ()
-renderCustomText str = 
-    mapM_ (\c -> do 
+renderCustomText str =
+    mapM_ (\c -> do
         renderChar c
         translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)) $ str
 
 renderChar :: Char -> IO ()
-renderChar c = 
-    preservingMatrix $ do 
-        translate $ Vector3 (0.1 :: GLfloat) (0.1 :: GLfloat) (0 :: GLfloat)  
-        scale (0.8 :: GLfloat) (0.8 :: GLfloat) (0 :: GLfloat)  
+renderChar c =
+    preservingMatrix $ do
+        translate $ Vector3 (0.1 :: GLfloat) (0.1 :: GLfloat) (0 :: GLfloat)
+        scale (0.8 :: GLfloat) (0.8 :: GLfloat) (0 :: GLfloat)
         renderPrimitive TriangleStrip $ mapM_ (\(x,y,z) -> vertex $ Vertex3 x y z) $ letterPath c
 
 drawPausedOverlay :: IO ()
@@ -135,16 +135,16 @@ drawBackdrop = do
     drawCaptionAt 0.5 "Lines"
     drawCaptionAt 0.125 "Hold"
     drawCaptionAt (-0.425) "Next"
-    where drawCaptionAt y caption = 
-            preservingMatrix $ do 
+    where drawCaptionAt y caption =
+            preservingMatrix $ do
                 translate $ Vector3 (0.25 :: GLfloat) (y :: GLfloat) (0 :: GLfloat)
                 scale (0.05 :: GLfloat) (0.05 :: GLfloat) (1 :: GLfloat)
                 renderCustomText caption
-            
+
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y = do
     preservingMatrix $ do
-        translate $ Vector3 x (y - 18) (0::GLfloat)
+        translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
         drawBlock block
 
 drawBlock :: Tetromino t => t -> IO ()
@@ -207,7 +207,7 @@ drawMenu active = do
         vertex $ vx3   0.50  (-0.55 ) 0
         vertex $ vx3   0.50  (-0.675) 0
         vertex $ vx3 (-0.50) (-0.675) 0
-    preservingMatrix $ do 
+    preservingMatrix $ do
         lightG
         translate $ Vector3 (0 :: GLfloat) (0.25::GLfloat) (0::GLfloat)
         scale (0.2 :: GLfloat) (0.2 :: GLfloat) (1 :: GLfloat)

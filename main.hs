@@ -9,9 +9,6 @@ import Game
 import KeyboardHandler
 import Display
 
-windowWidth  = 720
-windowHeight = 720
-
 main :: IO ()
 main = do
     initialWindowSize     $= Size windowWidth windowHeight
@@ -24,8 +21,8 @@ main = do
     displayCallback       $= displayGame game
     reshapeCallback       $= Just reshapeHandler
     keyboardMouseCallback $= Just (keyboardHandler queue paused)
-    addTimerCallback 10 (menuHandler queue game)    
-    fullScreen
+    addTimerCallback 10 (menuHandler queue game)
+    --fullScreen
     mainLoop
 
 -- Helpers
@@ -78,29 +75,29 @@ gameHandler queue game = do
             addTimerCallback 10 (gameHandler queue game)
     where pauseOrReturn :: IO ()
           pauseOrReturn = do
-            g <- atomically $ readTVar game 
-            case g of 
+            g <- atomically $ readTVar game
+            case g of
                Game _ _ _ _ _ _ _ _ -> modAndPlay togglePause
                _                    -> do
                     atomically $ writeTVar game $ GameMenu Start
                     postRedisplay Nothing
                     addTimerCallback 10 (menuHandler queue game)
           modAndPlay :: (Game -> Game) -> IO ()
-          modAndPlay modifier = do 
+          modAndPlay modifier = do
             modifyAndDisplay game modifier
             addTimerCallback 10 (gameHandler queue game)
 
 -- Handles the periodically dropping of the active block
 dropHandler :: TVar Game -> IO ()
 dropHandler game = do
-    f <- atomically $ do 
+    f <- atomically $ do
         g <- readTVar game
         case g of
             g@(Game w ls _ _ _ _ (_,((x1,y1), (x2,y2), (x3, y3), (x4,y4))) _) -> do
                 if freeForBlock g ((x1,y1-1), (x2,y2-1), (x3,y3-1), (x4,y4-1))
                 then modifyTVar game shiftDown
                 else modifyTVar game placeAndNew
-                case ls of 
+                case ls of
                     []                 -> do
                         writeTVar game $ GameError "Out of levels."
                         return (-1)
@@ -124,20 +121,20 @@ menuHandler queue game = do
         Just (Char '\r')          -> select
         _                         -> addTimerCallback 10 (menuHandler queue game)
     where toggleMenuItem = do
-            atomically $ 
-                modifyTVar game 
+            atomically $
+                modifyTVar game
                     (\g -> case g of
                             GameMenu Start -> GameMenu Quit
                             GameMenu Quit  -> GameMenu Start
                             other          -> other)
             postRedisplay Nothing
-            addTimerCallback 10 (menuHandler queue game) 
+            addTimerCallback 10 (menuHandler queue game)
           select = do
             g <- atomically $ readTVar game
             case g of
                 GameMenu Quit          -> exitSuccess
                 GameMenu Start         -> do
-                    seed <- getStdRandom (randomR (1, 10000)) 
+                    seed <- getStdRandom (randomR (1, 10000))
                     let newGame = defaultNewGame seed
                     atomically $ writeTVar game newGame
                     addTimerCallback 10 (gameHandler queue game)
@@ -147,7 +144,7 @@ menuHandler queue game = do
                 g@(Game _ _ _ True _ _ _ _)  -> do
                     atomically $ writeTVar game $ g { paused = False}
                     addTimerCallback 10 (gameHandler queue game)
-                g@(Game _ _ _ False _ _ _ _) -> do 
+                g@(Game _ _ _ False _ _ _ _) -> do
                     atomically $ writeTVar game $ g { paused = True }
                     addTimerCallback 10 (gameHandler queue game)
                 other -> do

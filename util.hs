@@ -7,6 +7,16 @@ import qualified Data.Map.Strict as Map
 import System.Random
 import Data.Time.Clock
 
+windowWidth  :: GLsizei
+windowWidth  = 720
+windowHeight :: GLsizei
+windowHeight = 720
+
+blocksX :: Int
+blocksX = 10
+blocksY :: Int
+blocksY = 18
+
 white  = color $ Color3 (1 :: GLfloat) (1 :: GLfloat) (1 :: GLfloat)
 gray   = color $ Color3 (0.5 :: GLfloat) (0.5 :: GLfloat) (0.5 :: GLfloat)
 black  = color $ Color3 (0 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
@@ -65,25 +75,25 @@ data Game where
                            , paused      :: Bool
                            , hold        :: (Maybe t, Bool)
                            , nextBlock   :: t
-                           , activeBlock :: (t, (Coord, Coord, Coord, Coord)) 
+                           , activeBlock :: (t, (Coord, Coord, Coord, Coord))
                            , rnds        :: [Int] } -> Game
     GameMenu  :: MItem -> Game
     GameOver  :: Game
     GameError :: String -> Game
 
 defaultNewGame :: Int -> Game
-defaultNewGame seed = 
+defaultNewGame seed =
     Game Map.empty
-         [Level 10 500, Level 15 400, Level 25 300] 
+         [Level 10 500, Level 15 400, Level 25 300]
          0
-         False 
+         False
          (Nothing, True)
          Lb
          (firstActiveBlock, pushToTop $ coords firstActiveBlock)
          rnds
     where i:rnds = randomRs (0,6) $ mkStdGen seed
           firstActiveBlock :: Block
-          firstActiveBlock = randomTetromino i 
+          firstActiveBlock = randomTetromino i
 
 pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
 pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
