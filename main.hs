@@ -94,7 +94,7 @@ dropHandler game = do
         g <- readTVar game
         case g of
             g@(Game w ls _ _ _ _ (_,((x1,y1), (x2,y2), (x3, y3), (x4,y4))) _) -> do
-                if freeForBlock g ((x1,y1-1), (x2,y2-1), (x3,y3-1), (x4,y4-1))
+                if freeForBlock w ((x1,y1-1), (x2,y2-1), (x3,y3-1), (x4,y4-1))
                 then modifyTVar game shiftDown
                 else modifyTVar game placeAndNew
                 case ls of

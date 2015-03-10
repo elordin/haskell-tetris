@@ -7,6 +7,7 @@ import qualified Data.Map.Strict as Map
 
 import Util
 import Font
+import Game (freeForBlock)
 
 displayGame :: TVar Game -> DisplayCallback
 displayGame tGame = do
@@ -18,7 +19,7 @@ displayGame tGame = do
         Game w ls s p (h, ch) nxtBlock (blockType, cs) _ -> do
             drawBackdrop
 
-            -- draw score and lines 2 go text
+            -- draw score and lines2go text
             let lines2go = case ls of
                             []              -> 0
                             ((Level l _):t) -> l
@@ -42,6 +43,7 @@ displayGame tGame = do
                 vertex $ vx3 0.875 0.125 0
                 vertex $ vx3 0.875 (-0.3) 0
                 vertex $ vx3 0.25 (-0.3) 0
+
             if p
             then drawPausedOverlay
             else preservingMatrix $ do
@@ -50,8 +52,11 @@ displayGame tGame = do
                 scale (1/(fromIntegral blocksX) :: GLfloat) (2/(fromIntegral blocksY) :: GLfloat) (1 :: GLfloat)
                 -- draw world
                 drawWorld $ w
-                -- draw active block
+                -- draw active block with ghost
+                drawGhost w cs
                 drawSingle blockType cs
+
+                -- TODO: make independent of world scale
                 -- draw hold
                 case h of
                     Nothing    -> return ()
@@ -64,6 +69,14 @@ displayGame tGame = do
                     drawSingle nxtBlock $ coords nxtBlock
     flush
     where drawSingle blockType (c1,c2,c3,c4) = mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+
+drawGhost :: Tetromino t => World t -> (Coord, Coord, Coord, Coord) -> IO ()
+drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4)) =
+    let next = ((x1,y1-1),(x2,y2-1),(x3,y3-1),(x4,y4-1))
+    in if freeForBlock w next
+       then drawGhost w next
+       else mapM_ (\(x,y) -> drawGhostBlockAt (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+
 
 drawWorld :: Tetromino t => World t -> IO ()
 drawWorld world =
@@ -142,10 +155,26 @@ drawBackdrop = do
                 renderCustomText caption
 
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
-drawBlockAt block x y = do
+drawBlockAt block x y =
     preservingMatrix $ do
         translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
         drawBlock block
+
+drawGhostBlockAt :: GLfloat -> GLfloat -> IO ()
+drawGhostBlockAt x y =
+    preservingMatrix $ do
+        translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
+        renderPrimitive Quads $ do
+            gray
+            vertex $ vx3 0.06 0.06 0
+            vertex $ vx3 0.06 0.94 0
+            vertex $ vx3 0.94 0.94 0
+            vertex $ vx3 0.94 0.06 0
+            white
+            vertex $ vx3 0.16 0.16 0
+            vertex $ vx3 0.16 0.84 0
+            vertex $ vx3 0.84 0.84 0
+            vertex $ vx3 0.84 0.16 0
 
 drawBlock :: Tetromino t => t -> IO ()
 drawBlock block = renderPrimitive Quads $ do

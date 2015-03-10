@@ -1,5 +1,5 @@
 COMPILER = ghc
-COMFLAGS = 
+COMFLAGS = -threaded
 SRCFILES = util.hs font.hs keyboardHandler.hs game.hs display.hs main.hs
 
 all:
