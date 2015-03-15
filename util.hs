@@ -2,7 +2,7 @@
 
 module Util where
 
-import Graphics.UI.GLUT hiding (Level)
+import Graphics.UI.GLUT (GLsizei, GLfloat, color, Vertex3(..), vertex, Color3(..))
 import qualified Data.Map.Strict as Map
 import System.Random
 import Data.Time.Clock
@@ -17,11 +17,14 @@ blocksX = 10
 blocksY :: Int
 blocksY = 18
 
-white  = color $ Color3 (1 :: GLfloat) (1 :: GLfloat) (1 :: GLfloat)
-gray   = color $ Color3 (0.5 :: GLfloat) (0.5 :: GLfloat) (0.5 :: GLfloat)
-black  = color $ Color3 (0 :: GLfloat) (0 :: GLfloat) (0 :: GLfloat)
-lightG = color $ Color3 (0.6 :: GLfloat) (0.8 :: GLfloat) (0.6 :: GLfloat)
-darkG  = color $ Color3 (0.2 :: GLfloat) (0.3 :: GLfloat) (0.2 :: GLfloat)
+setRGBColor :: GLfloat -> GLfloat -> GLfloat -> IO ()
+setRGBColor r g b = color $ Color3 r g b
+
+white  = setRGBColor 1 1 1
+gray   = setRGBColor 0.5 0.5 0.5
+black  = setRGBColor 0 0 0
+lightG = setRGBColor 0.6 0.8 0.6
+darkG  = setRGBColor 0.2 0.3 0.2
 
 type Coord = (Int, Int)
 data Rotation = Clockwise | CounterClockwise
@@ -65,7 +68,7 @@ type World t = Map.Map (Int, Int) t
 data Level = Level {lines::Int, frequency::Int}
     deriving(Show)
 
-data MItem = Start | Quit
+data MenuItem = Start | Quit
     deriving(Show)
 
 data Game where
@@ -77,7 +80,7 @@ data Game where
                            , nextBlock   :: t
                            , activeBlock :: (t, (Coord, Coord, Coord, Coord))
                            , rnds        :: [Int] } -> Game
-    GameMenu  :: MItem -> Game
+    GameMenu  :: MenuItem -> Game
     GameOver  :: Game
     GameError :: String -> Game
 
@@ -123,5 +126,5 @@ scorePerLines 2 =  250
 scorePerLines 1 =  100
 scorePerLines _ =    0
 
-vx3 :: GLfloat -> GLfloat -> GLfloat -> Vertex3 GLfloat
-vx3 x y z = Vertex3 x y z
+vx3 :: GLfloat -> GLfloat -> GLfloat -> IO ()
+vx3 x y z = vertex $ Vertex3 x y z

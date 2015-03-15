@@ -1,8 +1,8 @@
 module KeyboardHandler where
 
-import Control.Concurrent.STM
-import Graphics.UI.GLUT hiding (Level)
-import System.Exit
+import Control.Concurrent.STM (TVar, atomically, modifyTVar)
+import Graphics.UI.GLUT (KeyboardMouseCallback, Key(..), SpecialKey(..), KeyState(..), Modifiers(..), Position(..), fullScreenToggle)
+import System.Exit (exitSuccess)
 --import Util
 
 keyboardHandler :: TVar [Key] -> TVar Bool -> KeyboardMouseCallback

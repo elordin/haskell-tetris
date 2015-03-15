@@ -1,11 +1,7 @@
 module Game where
 
-import Control.Concurrent.STM
-import Graphics.UI.GLUT hiding (Level)
 import qualified Data.Map.Strict as Map
 import Data.List (sort, sortBy, partition)
-import System.Random
-import Debug.Trace
 
 import Util
 
@@ -47,7 +43,7 @@ freeForBlock w (a,b,c,d) =
         && y < blocksY
         && case Map.lookup (x,y) w of
             Nothing   -> True
-            Just b    -> False) [a,b,c,d]
+            Just _    -> False) [a,b,c,d]
 
 spin :: Game -> Game
 spin game@(Game w ls s p h n (blockType, coords@(cor, _, _, _)) rg) =
