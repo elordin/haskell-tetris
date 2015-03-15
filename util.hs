@@ -29,39 +29,30 @@ darkG  = setRGBColor 0.2 0.3 0.2
 type Coord = (Int, Int)
 data Rotation = Clockwise | CounterClockwise
 class Tetromino a where
-    colorScheme     :: a -> (IO (), IO (), IO (), IO ())
-    coords          :: a -> (Coord, Coord, Coord, Coord)
-    randomTetromino :: Int -> a
-
+    colorScheme :: a -> (IO (), IO (), IO (), IO ())
+    coords      :: a -> (Coord, Coord, Coord, Coord)
+    get         :: Int -> a
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb
     deriving(Eq, Enum)
-instance Show Block where
-    show Tb   = "T"
-    show Ob   = "O"
-    show Ib   = "I"
-    show Jb   = "J"
-    show Sb   = "S"
-    show Lb   = "L"
-    show Zb   = "Z"
 instance Tetromino Block where
-    randomTetromino i = toEnum $ mod i 6
+    get i = toEnum $ mod i 6
 
-    colorScheme Zb   = (black, lightG, lightG, black )
-    colorScheme Sb   = (black, darkG,  black,  white )
-    colorScheme Ob   = (black, white,  black,  black )
-    colorScheme Ib   = (black, lightG, lightG, lightG)
-    colorScheme Jb   = (black, lightG, black,  white )
-    colorScheme Lb   = (black, darkG,  darkG,  darkG )
-    colorScheme Tb   = (black, lightG, black,  lightG)
+    colorScheme Zb = (black, lightG, lightG, black )
+    colorScheme Sb = (black, darkG,  black,  white )
+    colorScheme Ob = (black, white,  black,  black )
+    colorScheme Ib = (black, lightG, lightG, lightG)
+    colorScheme Jb = (black, lightG, black,  white )
+    colorScheme Lb = (black, darkG,  darkG,  darkG )
+    colorScheme Tb = (black, lightG, black,  lightG)
 
-    coords Zb   = ((0, 0), (-1,  1), ( 0, 1), (1, 0))
-    coords Sb   = ((0, 0), (-1,  0), ( 0, 1), (1, 1))
-    coords Ob   = ((0, 0), ( 0,  1), ( 1, 0), (1, 1))
-    coords Ib   = ((0, 0), ( -1, 0), ( 1, 0), (2, 0))
-    coords Jb   = ((0, 0), (-1,  1), (-1, 0), (1, 0))
-    coords Lb   = ((0, 0), (-1,  0), ( 1, 0), (1, 1))
-    coords Tb   = ((0, 0), (-1,  0), ( 0, 1), (1, 0))
+    coords Zb = ((0, 0), (-1,  1), ( 0, 1), (1, 0))
+    coords Sb = ((0, 0), (-1,  0), ( 0, 1), (1, 1))
+    coords Ob = ((0, 0), ( 0,  1), ( 1, 0), (1, 1))
+    coords Ib = ((0, 0), ( -1, 0), ( 1, 0), (2, 0))
+    coords Jb = ((0, 0), (-1,  1), (-1, 0), (1, 0))
+    coords Lb = ((0, 0), (-1,  0), ( 1, 0), (1, 1))
+    coords Tb = ((0, 0), (-1,  0), ( 0, 1), (1, 0))
 
 type World t = Map.Map (Int, Int) t
 
@@ -96,7 +87,7 @@ defaultNewGame seed =
          rnds
     where i:rnds = randomRs (0,6) $ mkStdGen seed
           firstActiveBlock :: Block
-          firstActiveBlock = randomTetromino i
+          firstActiveBlock = get i
 
 pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
 pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
