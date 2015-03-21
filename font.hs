@@ -5,7 +5,13 @@ import Data.Char (isUpper, toLower)
 
 letterPath :: Char -> [(GLfloat, GLfloat, GLfloat)]
 letterPath ' ' = []
---letterPath 'a'
+letterPath 'a' = [ (0,      0,      0)
+                 , (0.25,   0,      0)
+                 , (0.375,  1,      0)
+                 , (0.5,    0.75,   0)
+                 , (0.625,  1,      0)
+                 , (0.75,   0,      0)
+                 , (1,      0,      0) ]
 --letterPath 'b'
 --letterPath 'c'
 --letterPath 'd'
@@ -26,19 +32,19 @@ letterPath 'e' = [ (1   , 0   , 0)
                  , (1   , 0.83, 0)
                  , (1   , 1   , 0) ]
 --letterPath 'f'
---letterPath 'g'
+-- ? letterPath 'g'
 letterPath 'h' = [ (0   , 1   , 0)
                  , (0   , 0   , 0)
                  , (0.33, 1   , 0)
                  , (0.33, 0   , 0)
                  , (0.33, 0.4 , 0)
                  , (0.33, 0.6 , 0)
-                 , (0.66, 0.6 , 0)
                  , (0.66, 0.4 , 0)
-                 , (0.66, 1   , 0)
+                 , (0.66, 0.6 , 0)
                  , (0.66, 0   , 0)
-                 , (1   , 1   , 0)
-                 , (1   , 0   , 0)]
+                 , (0.66, 1   , 0)
+                 , (1   , 0   , 0)
+                 , (1   , 1   , 0)]
 letterPath 'i' = [ (0.16, 1   , 0)
                  , (0.83, 1   , 0)
                  , (0.16, 0.83, 0)
@@ -51,9 +57,15 @@ letterPath 'i' = [ (0.16, 1   , 0)
                  , (0.16, 0   , 0)
                  , (0.83, 0.16, 0)
                  , (0.83, 0   , 0) ]
---letterPath 'j'
---letterPath 'k'
---letterPath 'l'
+-- ? letterPath 'j'
+-- ? letterPath 'k'
+letterPath 'l' = [ (1, 0, 0)
+                 , (1, 0.16, 0)
+                 , (0, 0, 0)
+                 , (0.33, 0.16, 0)
+                 , (0, 1, 0)
+                 , (0.33, 1, 0) ]
+
 --letterPath 'm'
 --letterPath 'n'
 letterPath 'o' = [ (1   , 2/7 , 0)
@@ -102,7 +114,13 @@ letterPath 'u' = [ (1   , 1   , 0)
                  , (0   , 2/7 , 0)
                  , (2/7 , 1   , 0)
                  , (0   , 1   , 0) ]
---letterPath 'v'
+letterPath 'v' = [ (0,      1,      0)
+                 , (0.25,   1,      0)
+                 , (0.375,  0,      0)
+                 , (0.5,    0.25,   0)
+                 , (0.625,  0,      0)
+                 , (0.75,   1,      0)
+                 , (1,      1,      0) ]
 letterPath 'w' = [ (0, 1, 0)
                  , (2/8, 1, 0)
                  , (1/8, 0, 0)
@@ -117,9 +135,15 @@ letterPath 'w' = [ (0, 1, 0)
                  --, (6/8, 1, 0)
                  , (1, 1, 0) ]
 --letterPath 'x'
---letterPath 'y'
---letterPath 'z'
---letterPath '1'
+-- ? letterPath 'y'
+-- ? letterPath 'z'
+letterPath '1' = [ (0.625, 0,    0)
+                 , (0.375, 0,    0)
+                 , (0.625, 1,    0)
+                 , (0.375, 0.66, 0)
+                 , (0.375, 1,    0)
+                 , (0.25,  0.63, 0)
+                 , (0.25,  0.83, 0) ]
 --letterPath '2'
 --letterPath '3'
 --letterPath '4'
@@ -129,7 +153,10 @@ letterPath 'w' = [ (0, 1, 0)
 --letterPath '8'
 --letterPath '9'
 letterPath '0' = letterPath 'o'
-
+letterPath '/' = [ (0,0,0)
+                 , (0.25, 0, 0)
+                 , (0.75, 1, 0)
+                 , (1, 1, 0) ]
 letterPath c   = if isUpper c
                  then letterPath $ toLower c
                  else [ (0, 1, 0) , (0, 0, 0) , (1, 1, 0) , (1, 0, 0) ]
