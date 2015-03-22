@@ -2,7 +2,7 @@ module Display where
 
 import Control.Concurrent.STM (atomically, TVar, readTVar)
 import Graphics.UI.GLUT (GLfloat, Vector3(..), scale, translate, preservingMatrix, renderPrimitive, PrimitiveMode(..), clear, flush, ClearBuffer(..))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict (toList)
 
 import Util
 import Font
@@ -147,7 +147,7 @@ drawBackdrop = do
 
 drawWorld :: Tetromino t => World t -> IO ()
 drawWorld world =
-    mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ Map.toList world
+    mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ toList world
 
 drawPausedOverlay :: IO ()
 drawPausedOverlay = do
