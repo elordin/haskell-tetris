@@ -1,7 +1,6 @@
 module Display where
 
-import Control.Concurrent.STM
-import Control.Applicative
+import Control.Concurrent.STM (atomically, TVar, readTVar)
 import Graphics.UI.GLUT (GLfloat, Vector3(..), scale, translate, preservingMatrix, renderPrimitive, PrimitiveMode(..), clear, flush, ClearBuffer(..))
 import qualified Data.Map.Strict as Map
 
@@ -14,7 +13,12 @@ displayGame tGame = do
     clear [ColorBuffer]
     g <- atomically $ readTVar tGame
     case g of
-        GameOver _     -> return ()
+        GameError e    -> drawTextAt ((-0.05) * (fromIntegral $ length e), 0, 0) (0.1, 0.1, 0.1) e red
+        GameOver score -> do
+            drawTextAt (-0.4,0.4,0) (0.2,0.2,1) "Game" lightG
+            drawTextAt (-0.4,0.2,0) (0.2,0.2,1) "Over" lightG
+            drawTextAt (-0.25,0,0) (0.1,0.1,1) "Score" white
+            drawTextAt (-0.05 * (fromIntegral $ length $ show score), -0.1, 0) (0.1, 0.1, 0.1) (show score) white
         GameMenu i     -> drawMenu i
         Game w ls s p (h, ch) nxtBlock (blockType, cs) _ -> do
             drawBackdrop

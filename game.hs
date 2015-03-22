@@ -1,7 +1,6 @@
 module Game where
 
 import qualified Data.Map.Strict as Map
-import Data.List (sort, sortBy, partition)
 
 import Util
 
@@ -99,3 +98,6 @@ placeAndNew (Game w ((Level l f):ls) s p (h,ch) nb ab (rnd:rnds)) =
                         []    -> [Level 0 f]
                         ((Level nl nf):t) -> (Level (nl + l - completeLines) nf):t
 placeAndNew other = other
+
+sort::Ord a=>[a]->[a]
+sort l=case l of{[]->[];(h:t)->(sort$filter(<h)t)++(h:(sort$filter(>=h)t))}

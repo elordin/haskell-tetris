@@ -6,8 +6,8 @@ import System.Exit (exitSuccess)
 --import Util
 
 keyboardHandler :: TVar [Key] -> TVar Bool -> KeyboardMouseCallback
-keyboardHandler _ _ (SpecialKey KeyF4) Down (Modifiers _ _ Down) _ = exitSuccess -- Alt+F4
-keyboardHandler _ _ (SpecialKey KeyF11) Down _ _ = fullScreenToggle -- F11 - toggle fullscreen
+keyboardHandler _ _ (SpecialKey KeyF4) Down (Modifiers _ _ Down) _ = exitSuccess
+keyboardHandler _ _ (SpecialKey KeyF11) Down _ _ = fullScreenToggle
 keyboardHandler queue paused key Down _ _ =
     if key `elem` validKeys then addToQueue else return ()
     where validKeys  = [ Char '\r'

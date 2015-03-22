@@ -4,8 +4,7 @@ module Util where
 
 import Graphics.UI.GLUT (GLsizei, GLfloat, color, Vertex3(..), vertex, Color3(..))
 import qualified Data.Map.Strict as Map
-import System.Random
-import Data.Time.Clock
+import System.Random (mkStdGen, randomRs)
 
 windowWidth  :: GLsizei
 windowWidth  = 720
@@ -25,6 +24,7 @@ gray   = setRGBColor 0.5 0.5 0.5
 black  = setRGBColor 0 0 0
 lightG = setRGBColor 0.6 0.8 0.6
 darkG  = setRGBColor 0.2 0.3 0.2
+red    = setRGBColor 0.8 0 0
 
 type Coord = (Int, Int)
 data Rotation = Clockwise | CounterClockwise
@@ -36,7 +36,7 @@ class Tetromino a where
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb
     deriving(Eq, Enum)
 instance Tetromino Block where
-    get i = toEnum $ mod i 6
+    get i = toEnum $ mod i 7
 
     colorScheme Zb = (black, lightG, lightG, black )
     colorScheme Sb = (black, darkG,  black,  white )

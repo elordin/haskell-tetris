@@ -1,8 +1,9 @@
-import Control.Concurrent.STM
-import Graphics.UI.GLUT hiding (Level)
-import System.Exit
-import System.Random
-import qualified Data.Map.Strict as Map
+import Control.Concurrent.STM (atomically, TVar, readTVar, modifyTVar, writeTVar, newTVarIO)
+import Graphics.UI.GLUT (Key(..), SpecialKey(..), Size(..), Position(..), GLsizei, GLint,
+    ($=), createWindow, initialWindowSize, getArgsAndInitialize, postRedisplay, addTimerCallback,
+    displayCallback, reshapeCallback, keyboardMouseCallback, mainLoop, viewport)
+import System.Exit (exitSuccess)
+import System.Random (getStdRandom, randomR)
 
 import Util
 import Game
@@ -43,7 +44,7 @@ readInput queue = atomically $ do
 
 -- WINDOW HANDLERS
 -- -----------------------------------------------------------------------------
-reshapeHandler :: ReshapeCallback
+reshapeHandler :: Size -> IO ()
 reshapeHandler size = do
     let Size w h = size
         newsize :: GLsizei
