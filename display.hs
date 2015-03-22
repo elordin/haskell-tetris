@@ -52,7 +52,7 @@ displayGame tGame = do
                 drawGhost w cs
                 drawSingle blockType cs
 
-                -- TODO: make independent of world scale
+                -- TODO: make independent of world scale for worlds of different sizes
                 -- draw hold
                 case h of
                     Nothing    -> return ()
