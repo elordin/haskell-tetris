@@ -39,11 +39,7 @@ displayGame tGame = do
             then return ()
             else renderPrimitive Quads $ do
                 gray
-                vx3 0.25 0.125 0
-                vx3 0.875 0.125 0
-                vx3 0.875 (-0.3) 0
-                vx3 0.25 (-0.3) 0
-
+                mapV3 [(0.25, 0.125, 0), (0.875, 0.125, 0), (0.875, -0.3, 0), (0.25, -0.3, 0)]
             if p
             then drawPausedOverlay
             else preservingMatrix $ do
@@ -92,16 +88,16 @@ renderChar c =
     preservingMatrix $ do
         translate $ Vector3 (0.1 :: GLfloat) (0.1 :: GLfloat) (0 :: GLfloat)
         scale (0.8 :: GLfloat) (0.8 :: GLfloat) (0 :: GLfloat)
-        renderPrimitive TriangleStrip $ mapM_ (\(x,y,z) -> vx3 x y z) $ letterPath c
+        renderPrimitive TriangleStrip $ mapV3 $ letterPath c
 
 drawPausedOverlay :: IO ()
 drawPausedOverlay = do
     renderPrimitive Quads $ do
         black
-        mapM_ (\(x,y,z) -> vx3 x y z) [
+        mapV3 [
             (-0.51, 0.26, 0), (-0.51, -0.26, 0), (0.51, -0.26, 0), (0.51, 0.26, 0)]
         white
-        mapM_ (\(x,y,z) -> vx3 x y z) [
+        mapV3 [
             (-0.5, 0.25, 0), (-0.5, -0.25, 0), (0.5, -0.25, 0), (0.5, 0.25, 0)]
     black
     preservingMatrix $ do
@@ -113,7 +109,7 @@ drawBackdrop :: IO ()
 drawBackdrop = do
     renderPrimitive Quads $ do
         white
-        mapM_ (\(x,y,z) -> vx3 x y z) [
+        mapV3 [
             -- playing field
               (-8/9, 1, 0), (1/9, 1, 0), (1/9, -1, 0), (-8/9, -1, 0)
             -- lines for level up area
@@ -146,76 +142,38 @@ drawGhostBlockAt x y =
         translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
         renderPrimitive Quads $ do
             gray
-            vx3 0.06 0.06 0
-            vx3 0.06 0.94 0
-            vx3 0.94 0.94 0
-            vx3 0.94 0.06 0
+            mapV3 [(0.06, 0.06, 0), (0.06, 0.94, 0), (0.94, 0.94, 0), (0.94, 0.06, 0)]
             white
-            vx3 0.16 0.16 0
-            vx3 0.16 0.84 0
-            vx3 0.84 0.84 0
-            vx3 0.84 0.16 0
+            mapV3 [(0.16, 0.16, 0), (0.16, 0.84, 0), (0.84, 0.84, 0), (0.84, 0.16, 0)]
 
 drawBlock :: Tetromino t => t -> IO ()
 drawBlock block = renderPrimitive Quads $ do
     c1
-    vx3 0    0    0
-    vx3 0    1    0
-    vx3 1    1    0
-    vx3 1    0    0
+    mapV3 [(0, 0, 0), (0, 1, 0), (1, 1, 0), (1, 0, 0)]
     c2
-    vx3 0.06 0.06 0
-    vx3 0.06 0.94 0
-    vx3 0.94 0.94 0
-    vx3 0.94 0.06 0
+    mapV3 [(0.06, 0.06, 0), (0.06, 0.94, 0), (0.94, 0.94, 0), (0.94, 0.06, 0)]
     c3
-    vx3 0.32 0.32 0
-    vx3 0.32 0.68 0
-    vx3 0.68 0.68 0
-    vx3 0.68 0.32 0
+    mapV3 [(0.32, 0.32, 0), (0.32, 0.68, 0), (0.68, 0.68, 0), (0.68, 0.32, 0)]
     c4
-    vx3 0.4  0.4  0
-    vx3 0.4  0.6  0
-    vx3 0.6  0.6  0
-    vx3 0.6  0.4  0
+    mapV3 [(0.4, 0.4, 0), (0.4, 0.6, 0), (0.6, 0.6, 0), (0.6, 0.4, 0)]
     where (c1, c2, c3, c4) = colorScheme block
 
 drawMenu :: MenuItem -> IO ()
 drawMenu active = do
     renderPrimitive Quads $ do
         lightG
-        case active of
-            Start -> do
-                vx3 (-0.52) (-0.53)  0
-                vx3   0.52  (-0.53)  0
-                vx3   0.52  (-0.695) 0
-                vx3 (-0.52) (-0.695) 0
-            Quit  -> do
-                vx3 (-0.52) (-0.73 ) 0
-                vx3   0.52  (-0.73 ) 0
-                vx3   0.52  (-0.895) 0
-                vx3 (-0.52) (-0.895) 0
+        mapV3 $ case active of
+            Start -> [ (-0.52, -0.53, 0), (0.52, -0.53, 0), (0.52, -0.695, 0), (-0.52, -0.695, 0) ]
+            Quit  -> [ (-0.52, -0.73 , 0), (0.52 , -0.73 , 0), (0.52 , -0.895, 0), (-0.52, -0.895, 0) ]
         black
-        vx3 (-0.51) (-0.74 ) 0
-        vx3   0.51  (-0.74 ) 0
-        vx3   0.51  (-0.885) 0
-        vx3 (-0.51) (-0.885) 0
-
-        vx3 (-0.51) (-0.54 ) 0
-        vx3   0.51  (-0.54 ) 0
-        vx3   0.51  (-0.685) 0
-        vx3 (-0.51) (-0.685) 0
-
+        mapV3 [(-0.51, -0.74 , 0), (0.51 , -0.74 , 0), (0.51 , -0.885, 0),
+            (-0.51, -0.885, 0), (-0.51, -0.54 , 0), (0.51 , -0.54 , 0),
+            (0.51 , -0.685, 0), (-0.51, -0.685, 0)]
         white
-        vx3 (-0.50) (-0.75 ) 0
-        vx3   0.50  (-0.75 ) 0
-        vx3   0.50  (-0.875) 0
-        vx3 (-0.50) (-0.875) 0
-
-        vx3 (-0.50) (-0.55 ) 0
-        vx3   0.50  (-0.55 ) 0
-        vx3   0.50  (-0.675) 0
-        vx3 (-0.50) (-0.675) 0
+        mapV3 [
+            (-0.50, -0.75 , 0), (0.50 , -0.75 , 0), (0.50 , -0.875, 0),
+            (-0.50, -0.875, 0), (-0.50, -0.55 , 0), (0.50 , -0.55 , 0),
+            (0.50 , -0.675, 0), (-0.50, -0.675, 0) ]
     preservingMatrix $ do
         lightG
         translate $ Vector3 (0 :: GLfloat) (0.25::GLfloat) (0::GLfloat)
@@ -226,7 +184,7 @@ drawMenu active = do
         white
         scale (0.05 :: GLfloat) (0.05 :: GLfloat) (1 :: GLfloat)
         translate $ Vector3 (-6::GLfloat) (0::GLfloat) (0::GLfloat)
-        renderCustomText "Thomas Weber"
+        renderCustomText "Thomas 1234567890"
         translate $ Vector3 (-11.5::GLfloat) (-2::GLfloat) (0::GLfloat)
         renderCustomText "FFP WS14/15"
     preservingMatrix $ do

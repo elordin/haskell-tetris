@@ -117,5 +117,8 @@ scorePerLines 2 =  250
 scorePerLines 1 =  100
 scorePerLines _ =    0
 
-vx3 :: GLfloat -> GLfloat -> GLfloat -> IO ()
-vx3 x y z = vertex $ Vertex3 x y z
+v3 :: (GLfloat, GLfloat, GLfloat) -> IO ()
+v3 (x,y,z) = vertex $ Vertex3 x y z
+
+mapV3 :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
+mapV3 = mapM_ v3
