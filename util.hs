@@ -72,7 +72,7 @@ data Game where
                            , activeBlock :: (t, (Coord, Coord, Coord, Coord))
                            , rnds        :: [Int] } -> Game
     GameMenu  :: MenuItem -> Game
-    GameOver  :: Game
+    GameOver  :: Int -> Game
     GameError :: String -> Game
 
 defaultNewGame :: Int -> Game

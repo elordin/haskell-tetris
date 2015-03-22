@@ -65,11 +65,11 @@ holdBlock game@(Game w ls s p (h,ch) n (a,_) (rnd:rnds)) =
         Nothing -> let newPos = pushToTop $ coords n
                    in if freeForBlock w newPos
                       then Game w ls s p (Just a, False) (get rnd) (n, newPos) rnds
-                      else GameOver
+                      else GameOver s
         Just ho -> let newPos = pushToTop $ coords ho
                    in if freeForBlock w newPos
                       then Game w ls s p (Just a, False) n (ho, newPos) rnds
-                      else GameOver
+                      else GameOver s
 holdBlock other = other
 
 placeAndNew :: Game -> Game
@@ -78,7 +78,7 @@ placeAndNew (Game _ _ _ _ _ _ _ []) = GameError "Out of random numbers."
 placeAndNew (Game w ((Level l f):ls) s p (h,ch) nb ab (rnd:rnds)) =
     if freeForBlock w nextBlockPos
     then Game newWorld newLevels (s + (scorePerLines completeLines)) p (h,True) (get rnd) (nb, nextBlockPos) rnds
-    else GameOver
+    else GameOver s
     where
         nextBlockPos :: (Coord, Coord, Coord, Coord)
         nextBlockPos = pushToTop $ coords nb
