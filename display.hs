@@ -1,7 +1,8 @@
 module Display where
 
 import Control.Concurrent.STM (atomically, TVar, readTVar)
-import Graphics.UI.GLUT (GLfloat, Vector3(..), scale, translate, preservingMatrix, renderPrimitive, PrimitiveMode(..), clear, flush, ClearBuffer(..))
+import Graphics.UI.GLUT (GLfloat, Vector3(..), PrimitiveMode(..), ClearBuffer(..), 
+    scale, translate, preservingMatrix, renderPrimitive, clear, flush)
 import Data.Map.Strict (toList)
 
 import Util
@@ -180,7 +181,7 @@ drawMenu active = do
                 (-0.50, -0.875, 0), (-0.50, -0.55 , 0), (0.50 , -0.55 , 0),
                 (0.50 , -0.675, 0), (-0.50, -0.675, 0) ]
 
-    drawTextAt (-0.6,0.25,0) (0.2,0.2,1) "3Tetris" lightG
+    drawTextAt (-0.6,0.25,0) (0.2,0.2,1) "9T6etris" lightG
     drawTextAt (-0.3,0,0) (0.05,0.05,1) "Thomas Weber" white
     drawTextAt (-0.275,-0.1,0) (0.05,0.05,1) "FFP WS14/15" white
     drawTextAt (-0.1875,-0.65,0) (0.075,0.075,1) "Start" black

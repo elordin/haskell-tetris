@@ -78,7 +78,7 @@ data Game where
 defaultNewGame :: Int -> Game
 defaultNewGame seed =
     Game Map.empty
-         [Level 10 500, Level 15 400, Level 25 300]
+         [Level 96 500, Level 15 400, Level 25 300]
          0
          False
          (Nothing, True)
@@ -90,20 +90,16 @@ defaultNewGame seed =
           firstActiveBlock = get i
 
 pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
-pushToTop (c1,c2,c3,c4) = let push (x,y) = (x+4, y+16)
+pushToTop (c1,c2,c3,c4) = let push (x,y) = (x + blocksX `div` 2,y + blocksY - 2)
                           in (push c1, push c2, push c3, push c4)
 
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
 rotateNormalized (o1, o2, o3, o4) (cx, cy) r =
     case r of
-        Clockwise        -> ( (o1ny + cx, -1 * o1nx + cy)
-                            , (o2ny + cx, -1 * o2nx + cy)
-                            , (o3ny + cx, -1 * o3nx + cy)
-                            , (o4ny + cx, -1 * o4nx + cy) )
-        CounterClockwise -> ( (-1 * o1ny + cx, o1nx + cy)
-                            , (-1 * o2ny + cx, o2nx + cy)
-                            , (-1 * o3ny + cx, o3nx + cy)
-                            , (-1 * o4ny + cx, o4nx + cy) )
+        Clockwise        -> ( (o1ny + cx, -1 * o1nx + cy) , (o2ny + cx, -1 * o2nx + cy)
+                            , (o3ny + cx, -1 * o3nx + cy) , (o4ny + cx, -1 * o4nx + cy) )
+        CounterClockwise -> ( (-1 * o1ny + cx, o1nx + cy) , (-1 * o2ny + cx, o2nx + cy)
+                            , (-1 * o3ny + cx, o3nx + cy) , (-1 * o4ny + cx, o4nx + cy) )
     where normalize (x,y) = (x - cx, y - cy)
           (o1nx, o1ny)    = normalize o1
           (o2nx, o2ny)    = normalize o2
