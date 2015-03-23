@@ -1,7 +1,7 @@
 import Control.Concurrent.STM (atomically, TVar, readTVar, modifyTVar, writeTVar, newTVarIO)
 import Graphics.UI.GLUT (Key(..), SpecialKey(..), Size(..), Position(..), GLsizei, GLint,
     ($=), createWindow, initialWindowSize, getArgsAndInitialize, postRedisplay, addTimerCallback,
-    displayCallback, reshapeCallback, keyboardMouseCallback, mainLoop, viewport)
+    displayCallback, reshapeCallback, keyboardMouseCallback, mainLoop, viewport, fullScreen)
 import System.Exit (exitSuccess)
 import System.Random (getStdRandom, randomR)
 
@@ -16,14 +16,13 @@ main = do
     getArgsAndInitialize
     window                <- createWindow "Tretis"
     queue                 <- newTVarIO []
-    paused                <- newTVarIO True
     game                  <- newTVarIO $ GameMenu Start
     viewport              $= (Position 0 0, Size windowWidth windowHeight)
     displayCallback       $= displayGame game
     reshapeCallback       $= Just reshapeHandler
-    keyboardMouseCallback $= Just (keyboardHandler queue paused)
+    keyboardMouseCallback $= Just (keyboardHandler queue)
     addTimerCallback 10 (menuHandler queue game)
-    --fullScreen
+    fullScreen
     mainLoop
 
 -- Helpers
@@ -74,8 +73,7 @@ gameHandler queue game = do
         Just (SpecialKey KeyShiftR) -> modAndPlay holdBlock
         _                           ->
             addTimerCallback 10 (gameHandler queue game)
-    where pauseOrReturn :: IO ()
-          pauseOrReturn = do
+    where pauseOrReturn = do
             g <- atomically $ readTVar game
             case g of
                Game _ _ _ _ _ _ _ _ -> modAndPlay togglePause
@@ -83,7 +81,6 @@ gameHandler queue game = do
                     atomically $ writeTVar game $ GameMenu Start
                     postRedisplay Nothing
                     addTimerCallback 10 (menuHandler queue game)
-          modAndPlay :: (Game -> Game) -> IO ()
           modAndPlay modifier = do
             modifyAndDisplay game modifier
             addTimerCallback 10 (gameHandler queue game)

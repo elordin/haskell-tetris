@@ -1,7 +1,7 @@
 module Display where
 
 import Control.Concurrent.STM (atomically, TVar, readTVar)
-import Graphics.UI.GLUT (GLfloat, Vector3(..), PrimitiveMode(..), ClearBuffer(..), 
+import Graphics.UI.GLUT (GLfloat, Vector3(..), PrimitiveMode(..), ClearBuffer(..),
     scale, translate, preservingMatrix, renderPrimitive, clear, flush)
 import Data.Map.Strict (toList)
 
@@ -9,6 +9,7 @@ import Util
 import Font
 import Game (freeForBlock)
 
+-- displays running game or menu when given respectively
 displayGame :: TVar Game -> IO ()
 displayGame tGame = do
     clear [ColorBuffer]
@@ -58,6 +59,7 @@ displayGame tGame = do
     flush
     where drawSingle blockType (c1,c2,c3,c4) = mapM_ (\(x,y) -> drawBlockAt blockType (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
 
+-- draws a single character in a 1 x 1 square
 drawChar :: Char -> IO ()
 drawChar c =
     preservingMatrix $ do
@@ -65,12 +67,14 @@ drawChar c =
         scale (0.8 :: GLfloat) (0.8 :: GLfloat) (0 :: GLfloat)
         renderPrimitive TriangleStrip $ mapV3 $ letterPath c
 
+-- draws a String in a 1 x String-length rectangle
 drawText :: String -> IO ()
 drawText str =
     mapM_ (\c -> do
         drawChar c
         translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)) $ str
 
+-- draws a String at a given position at a give scale
 drawTextAt :: (GLfloat, GLfloat, GLfloat) -> (GLfloat, GLfloat, GLfloat) -> String -> IO () -> IO ()
 drawTextAt (x,y,z) (sx,sy,sz) text colour = preservingMatrix $ do
     colour
@@ -78,14 +82,17 @@ drawTextAt (x,y,z) (sx,sy,sz) text colour = preservingMatrix $ do
     scale sx sy sz
     drawText text
 
+-- draws number indicating remaining lines
 drawLinesToGo :: Int -> IO ()
 drawLinesToGo lines2go =
     drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show lines2go)), 0.325, 0) (0.1, 0.1, 0.1) (show lines2go) black
 
+-- draws number indicating the score
 drawScore :: Int -> IO ()
 drawScore score =
     drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show score)), 0.7, 0) (0.1, 0.1, 0.1) (show score) black
 
+-- draws a single Block in a 1 x 1 square
 drawBlock :: Tetromino t => t -> IO ()
 drawBlock block = renderPrimitive Quads $ do
     c1
@@ -98,12 +105,22 @@ drawBlock block = renderPrimitive Quads $ do
     mapV3 [(0.4, 0.4, 0), (0.4, 0.6, 0), (0.6, 0.6, 0), (0.6, 0.4, 0)]
     where (c1, c2, c3, c4) = colorScheme block
 
+-- draws a single Block in a 1 x 1 square at a given position
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y =
     preservingMatrix $ do
         translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
         drawBlock block
 
+-- draws a ghost-block in a 1 x 1 square
+drawGhost :: Tetromino t => World t -> (Coord, Coord, Coord, Coord) -> IO ()
+drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4)) =
+    let next = ((x1,y1-1),(x2,y2-1),(x3,y3-1),(x4,y4-1))
+    in if freeForBlock w next
+       then drawGhost w next
+       else mapM_ (\(x,y) -> drawGhostBlockAt (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+
+-- draws a ghost-block at a given position
 drawGhostBlockAt :: GLfloat -> GLfloat -> IO ()
 drawGhostBlockAt x y =
     preservingMatrix $ do
@@ -114,13 +131,7 @@ drawGhostBlockAt x y =
             white
             mapV3 [(0.16, 0.16, 0), (0.16, 0.84, 0), (0.84, 0.84, 0), (0.84, 0.16, 0)]
 
-drawGhost :: Tetromino t => World t -> (Coord, Coord, Coord, Coord) -> IO ()
-drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4)) =
-    let next = ((x1,y1-1),(x2,y2-1),(x3,y3-1),(x4,y4-1))
-    in if freeForBlock w next
-       then drawGhost w next
-       else mapM_ (\(x,y) -> drawGhostBlockAt (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
-
+-- draws black and white game backdrop
 drawBackdrop :: IO ()
 drawBackdrop = do
     renderPrimitive Quads $ do
@@ -146,10 +157,12 @@ drawBackdrop = do
                 scale (0.05 :: GLfloat) (0.05 :: GLfloat) (1 :: GLfloat)
                 drawText caption
 
+-- draws game world with each block being 1 x 1 large
 drawWorld :: Tetromino t => World t -> IO ()
 drawWorld world =
     mapM_ (\((x,y),b) -> drawBlockAt b (fromIntegral x) (fromIntegral y)) $ toList world
 
+-- draws pause overlay at the screens centre
 drawPausedOverlay :: IO ()
 drawPausedOverlay = do
     renderPrimitive Quads $ do
@@ -165,6 +178,7 @@ drawPausedOverlay = do
         scale (0.125 :: GLfloat) (0.125 :: GLfloat) (0 :: GLfloat)
         drawText "Paused"
 
+-- draws menu with given menu item selected
 drawMenu :: MenuItem -> IO ()
 drawMenu active = do
     renderPrimitive Quads $ do

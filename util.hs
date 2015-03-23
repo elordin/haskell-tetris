@@ -27,10 +27,15 @@ darkG  = setRGBColor 0.2 0.3 0.2
 red    = setRGBColor 0.8 0 0
 
 type Coord = (Int, Int)
+
 data Rotation = Clockwise | CounterClockwise
+
 class Tetromino a where
+    -- defined colour-scheme of a Tetromino (ouside-in)
     colorScheme :: a -> (IO (), IO (), IO (), IO ())
+    -- coordinates of the four blocks relative to an arbitrary centre
     coords      :: a -> (Coord, Coord, Coord, Coord)
+    -- returns a specific Tetromino
     get         :: Int -> a
 
 data Block   = Tb | Ob | Ib | Jb | Sb | Lb | Zb
@@ -78,7 +83,7 @@ data Game where
 defaultNewGame :: Int -> Game
 defaultNewGame seed =
     Game Map.empty
-         [Level 96 500, Level 15 400, Level 25 300]
+         [Level 10 700, Level 10 600, Level 10 500, Level 15 400, Level 25 300, Level 30 200]
          0
          False
          (Nothing, True)
@@ -89,10 +94,12 @@ defaultNewGame seed =
           firstActiveBlock :: Block
           firstActiveBlock = get i
 
+-- pushes a Tetromino to the top of the playing board
 pushToTop :: (Coord, Coord, Coord, Coord) -> (Coord, Coord, Coord, Coord)
 pushToTop (c1,c2,c3,c4) = let push (x,y) = (x + blocksX `div` 2,y + blocksY - 2)
                           in (push c1, push c2, push c3, push c4)
 
+-- rotates around a given centre of rotation
 rotateNormalized :: (Coord, Coord, Coord, Coord) -> Coord -> Rotation -> (Coord, Coord, Coord, Coord)
 rotateNormalized (o1, o2, o3, o4) (cx, cy) r =
     case r of
@@ -113,8 +120,10 @@ scorePerLines 2 =  250
 scorePerLines 1 =  100
 scorePerLines _ =    0
 
+-- utility function for creating vertices
 v3 :: (GLfloat, GLfloat, GLfloat) -> IO ()
 v3 (x,y,z) = vertex $ Vertex3 x y z
 
+-- utility function for creating multiple vertices at once
 mapV3 :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 mapV3 = mapM_ v3
