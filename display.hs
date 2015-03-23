@@ -180,9 +180,8 @@ drawMenu active = do
         mapV3 [ (-0.50, -0.75 , 0), (0.50 , -0.75 , 0), (0.50 , -0.875, 0),
                 (-0.50, -0.875, 0), (-0.50, -0.55 , 0), (0.50 , -0.55 , 0),
                 (0.50 , -0.675, 0), (-0.50, -0.675, 0) ]
-
-    drawTextAt (-0.6,0.25,0) (0.2,0.2,1) "9T6etris" lightG
-    drawTextAt (-0.3,0,0) (0.05,0.05,1) "Thomas Weber" white
-    drawTextAt (-0.275,-0.1,0) (0.05,0.05,1) "FFP WS14/15" white
-    drawTextAt (-0.1875,-0.65,0) (0.075,0.075,1) "Start" black
-    drawTextAt (-0.15,-0.85,0) (0.075,0.075,1) "Quit" black
+    drawTextAt (-0.6,0.25,0)     (0.2,0.2,1)     "Tetris"       lightG
+    drawTextAt (-0.3,0,0)        (0.05,0.05,1)   "Thomas Weber" white
+    drawTextAt (-0.275,-0.1,0)   (0.05,0.05,1)   "FFP WS14/15"  white
+    drawTextAt (-0.1875,-0.65,0) (0.075,0.075,1) "Start"        black
+    drawTextAt (-0.15,-0.85,0)   (0.075,0.075,1) "Quit"         black
