@@ -49,8 +49,8 @@ reshapeHandler size = do
         newsize :: GLsizei
         newsize  = min w h
         offsetY :: GLint
-        offsetY  = (h - newsize)
-    viewport    $= (Position (floor $ (fromIntegral (max (w - newsize) 0) / 2)) offsetY, Size newsize newsize)
+        offsetY  = h - newsize
+    viewport    $= (Position (floor (fromIntegral (max (w - newsize) 0) / 2)) offsetY, Size newsize newsize)
     postRedisplay Nothing
 
 -- Handles keyboard input during the game
@@ -76,7 +76,7 @@ gameHandler queue game = do
     where pauseOrReturn = do
             g <- atomically $ readTVar game
             case g of
-               Game _ _ _ _ _ _ _ _ -> modAndPlay togglePause
+               Game {} -> modAndPlay togglePause
                _                    -> do
                     atomically $ writeTVar game $ GameMenu Start
                     postRedisplay Nothing
@@ -99,7 +99,7 @@ dropHandler game = do
                     []                 -> do
                         writeTVar game $ GameError "Out of levels."
                         return (-1)
-                    ((Level _ freq):t) -> return freq
+                    (Level _ freq :t) -> return freq
             _ -> return (-1)
     if f > 0
     then do

@@ -15,17 +15,17 @@ displayGame tGame = do
     clear [ColorBuffer]
     g <- atomically $ readTVar tGame
     case g of
-        GameError e    -> drawTextAt ((-0.05) * (fromIntegral $ length e), 0, 0) (0.1, 0.1, 0.1) e red
+        GameError e    -> drawTextAt ((-0.05) * fromIntegral (length e), 0, 0) (0.1, 0.1, 0.1) e red
         GameOver score -> do
             drawTextAt (-0.4,0.4,0) (0.2,0.2,1) "Game" lightG
             drawTextAt (-0.4,0.2,0) (0.2,0.2,1) "Over" lightG
             drawTextAt (-0.25,0,0) (0.1,0.1,1) "Score" white
-            drawTextAt (-0.05 * (fromIntegral $ length $ show score), -0.1, 0) (0.1, 0.1, 0.1) (show score) white
+            drawTextAt (-0.05 * fromIntegral (length $ show score), -0.1, 0) (0.1, 0.1, 0.1) (show score) white
         GameMenu i     -> drawMenu i
         Game w ls s p (h, ch) nxtBlock (blockType, cs) _ -> do
             drawBackdrop
             -- draw score and lines2go text
-            drawLinesToGo $ case ls of { [] -> 0; ((Level l _):t) -> l }
+            drawLinesToGo $ case ls of { [] -> 0; (Level l _ : t) -> l }
             drawScore s
             -- redraw hold area in gray if already held a block
             if ch
@@ -38,9 +38,9 @@ displayGame tGame = do
             else preservingMatrix $ do
                 -- set frame of reference for drawing the field
                 translate $ Vector3 (-8/9 :: GLfloat) (1 :: GLfloat) (0 :: GLfloat)
-                scale (1/(fromIntegral blocksX) :: GLfloat) (2/(fromIntegral blocksY) :: GLfloat) (1 :: GLfloat)
+                scale (1/fromIntegral blocksX :: GLfloat) (2/fromIntegral blocksY :: GLfloat) (1 :: GLfloat)
                 -- draw world
-                drawWorld $ w
+                drawWorld w
                 -- draw active block with ghost
                 drawGhost w cs
                 drawSingle blockType cs
@@ -69,10 +69,9 @@ drawChar c =
 
 -- draws a String in a 1 x String-length rectangle
 drawText :: String -> IO ()
-drawText str =
-    mapM_ (\c -> do
-        drawChar c
-        translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat)) $ str
+drawText = mapM_ (\c -> do
+    drawChar c
+    translate $ Vector3 (1::GLfloat) (0::GLfloat) (0::GLfloat))
 
 -- draws a String at a given position at a give scale
 drawTextAt :: (GLfloat, GLfloat, GLfloat) -> (GLfloat, GLfloat, GLfloat) -> String -> IO () -> IO ()
@@ -85,12 +84,12 @@ drawTextAt (x,y,z) (sx,sy,sz) text colour = preservingMatrix $ do
 -- draws number indicating remaining lines
 drawLinesToGo :: Int -> IO ()
 drawLinesToGo lines2go =
-    drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show lines2go)), 0.325, 0) (0.1, 0.1, 0.1) (show lines2go) black
+    drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - length (show lines2go)), 0.325, 0) (0.1, 0.1, 0.1) (show lines2go) black
 
 -- draws number indicating the score
 drawScore :: Int -> IO ()
 drawScore score =
-    drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - (length $ show score)), 0.7, 0) (0.1, 0.1, 0.1) (show score) black
+    drawTextAt (0.3125 + 0.1 * (fromIntegral $ 5 - length (show score)), 0.7, 0) (0.1, 0.1, 0.1) (show score) black
 
 -- draws a single Block in a 1 x 1 square
 drawBlock :: Tetromino t => t -> IO ()
@@ -109,7 +108,7 @@ drawBlock block = renderPrimitive Quads $ do
 drawBlockAt :: Tetromino t => t -> GLfloat -> GLfloat -> IO ()
 drawBlockAt block x y =
     preservingMatrix $ do
-        translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
+        translate $ Vector3 x (y - fromIntegral blocksY) (0::GLfloat)
         drawBlock block
 
 -- draws a ghost-block in a 1 x 1 square
@@ -123,7 +122,7 @@ drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4))
 drawGhostBlockAt :: GLfloat -> GLfloat -> IO ()
 drawGhostBlockAt x y =
     preservingMatrix $ do
-        translate $ Vector3 x (y - (fromIntegral blocksY)) (0::GLfloat)
+        translate $ Vector3 x (y - fromIntegral blocksY) (0::GLfloat)
         renderPrimitive Quads $ do
             gray
             mapV3 [(0.06, 0.06, 0), (0.06, 0.94, 0), (0.94, 0.94, 0), (0.94, 0.06, 0)]

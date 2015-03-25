@@ -24,7 +24,7 @@ shiftBlockH :: Game -> (Int -> Int) -> Game
 shiftBlockH game op = shiftBlock game op id
 
 shiftBlockV :: Game -> (Int -> Int) -> Game
-shiftBlockV game op = shiftBlock game id op
+shiftBlockV game = shiftBlock game id
 
 shiftBlock :: Game -> (Int -> Int) -> (Int -> Int) -> Game
 shiftBlock game@(Game w ls s p h n (blockType, ((x1,y1),(x2,y2),(x3,y3),(x4,y4))) rg) opX opY
@@ -35,7 +35,7 @@ shiftBlock other _ _ = other
 
 freeForBlock :: Tetromino t =>  World t -> (Coord, Coord, Coord, Coord) -> Bool
 freeForBlock w (a,b,c,d) =
-    and $ map (\(x,y) -> x >= 0
+    all (\(x,y) -> x >= 0
         && x < blocksX
         && y >= 0
         && y < blocksY
@@ -89,11 +89,11 @@ placeAndNew (Game w ((Level l f):ls) s p (h,ch) nb ab (rnd:rnds))
             foldr (\k m -> Map.insert k blockType m) targetWorld [c1,c2,c3,c4]
         newLevels :: [Level]
         newLevels
-            | l - completeLines > 0 = (Level (l - completeLines) f):ls
+            | l - completeLines > 0 = Level (l - completeLines) f:ls
             | otherwise = case ls of
                 []    -> [Level 0 f]
-                ((Level nl nf):t) -> (Level (nl + l - completeLines) nf):t
+                (Level nl nf:t) -> Level (nl + l - completeLines) nf:t
 placeAndNew other = other
 
 sort::Ord a=>[a]->[a]
-sort l=case l of{[]->[];(h:t)->(sort$filter(<h)t)++(h:(sort$filter(>=h)t))}
+sort l=case l of{[]->[];(h:t)->sort$filter(<h)t++(h:(sort$filter(>=h)t))}
