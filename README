@@ -1,0 +1,41 @@
+Tetris
+Written in Haskell as a project for the Advanced Functional Programming lecture
+during winter-semester 2014/15 at LMU Munich by Thomas Weber
+Mat# 10742725
+
+
+Used externals
+--------------------------------------------------------------------------------
+Control.Concurrent.STM
+Graphics.UI.GLUT
+System.Random
+System.Exit
+Data.Char
+Data.Map
+GADTs
+
+NOTE that GLUT may require certain OpenGL libraries which in turn require
+certain Graphic Card drivers.
+
+
+Compilation
+--------------------------------------------------------------------------------
+Compile using
+    make
+or
+    make o2
+if you like subliminal optimizations
+
+
+Files
+--------------------------------------------------------------------------------
+main.hs
+    main program and GLUT window handlers
+game.hs
+    mutators for the game
+display.hs
+    GLUT rendering on main window
+util.hs
+    utility functions, type and constants definitions
+font.hs
+    definition of geometry of custom font
