@@ -163,6 +163,6 @@ letterPath '9' = map (\(x,y,z) -> (1-x,1-y,z)) $ letterPath '6'
 letterPath '0' = letterPath 'o'
 letterPath '/' = [ (0   , 0   , 0) , (0.25, 0   , 0) , (0.75, 1   , 0)
                  , (1   , 1   , 0) ]
-letterPath c   = if isUpper c
-                 then letterPath $ toLower c
-                 else [ (0, 1, 0) , (0, 0, 0) , (1, 1, 0) , (1, 0, 0) ]
+letterPath c
+    | isUpper c = letterPath $ toLower c
+    | otherwise = [ (0, 1, 0) , (0, 0, 0) , (1, 1, 0) , (1, 0, 0) ]

@@ -7,8 +7,9 @@ import System.Exit (exitSuccess)
 keyboardHandler :: TVar [Key] -> KeyboardMouseCallback
 keyboardHandler _ (SpecialKey KeyF4) Down (Modifiers _ _ Down) _ = exitSuccess
 keyboardHandler _ (SpecialKey KeyF11) Down _ _ = fullScreenToggle
-keyboardHandler queue key Down _ _ =
-    if key `elem` validKeys then addToQueue else return ()
+keyboardHandler queue key Down _ _
+    | key `elem` validKeys = addToQueue
+    | otherwise = return ()
     where validKeys  = [ Char '\r'
                        , Char '\n'
                        , Char '\ESC'

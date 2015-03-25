@@ -114,11 +114,10 @@ drawBlockAt block x y =
 
 -- draws a ghost-block in a 1 x 1 square
 drawGhost :: Tetromino t => World t -> (Coord, Coord, Coord, Coord) -> IO ()
-drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4)) =
-    let next = ((x1,y1-1),(x2,y2-1),(x3,y3-1),(x4,y4-1))
-    in if freeForBlock w next
-       then drawGhost w next
-       else mapM_ (\(x,y) -> drawGhostBlockAt (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+drawGhost w (c1@(x1,y1),c2@(x2,y2),c3@(x3,y3),c4@(x4,y4))
+    | freeForBlock w next = drawGhost w next
+    | otherwise = mapM_ (\(x,y) -> drawGhostBlockAt (fromIntegral x :: GLfloat) (fromIntegral y :: GLfloat)) [c1,c2,c3,c4]
+    where next = ((x1,y1-1),(x2,y2-1),(x3,y3-1),(x4,y4-1))
 
 -- draws a ghost-block at a given position
 drawGhostBlockAt :: GLfloat -> GLfloat -> IO ()

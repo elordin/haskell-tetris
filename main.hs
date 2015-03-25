@@ -14,7 +14,7 @@ main :: IO ()
 main = do
     initialWindowSize     $= Size windowWidth windowHeight
     getArgsAndInitialize
-    window                <- createWindow "Tretis"
+    window                <- createWindow "Tetris"
     queue                 <- newTVarIO []
     game                  <- newTVarIO $ GameMenu Start
     viewport              $= (Position 0 0, Size windowWidth windowHeight)
